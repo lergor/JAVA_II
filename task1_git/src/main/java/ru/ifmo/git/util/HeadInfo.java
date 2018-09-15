@@ -1,6 +1,6 @@
 package ru.ifmo.git.util;
 
-public class BranchInfo {
+public class HeadInfo {
 
     public String branchName;
     public String headHash;
@@ -8,14 +8,20 @@ public class BranchInfo {
     public String logFilePath;
     public String storagePath;
 
-    public BranchInfo() {
+    public HeadInfo() {
     }
 
-    public BranchInfo(String branch, String head) {
+    public HeadInfo(String branch) {
         branchName = branch;
-        headHash = head;
+        headHash = "";
         historyFilePath = "info/hist_" + branchName;
         logFilePath = "logs/" + branchName;
-        storagePath = "storage/" + headHash;
+        storagePath = "storage";
+    }
+
+    public void setHeadHash(String hash) {
+        headHash = hash;
+        storagePath = "storage/" + hash;
+
     }
 }

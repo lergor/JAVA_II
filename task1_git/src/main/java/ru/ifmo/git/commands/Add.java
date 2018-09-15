@@ -29,53 +29,17 @@ public class Add implements Command {
     }
 
     @Override
-    public CommandResult execute(List<String> args) throws GitException {
+    public CommandResult execute(List<String> args) {
         if(!repositoryExists()) {
             return new CommandResult(ExitStatus.ERROR, "fatal: Not a git repository: .m_git\n");
         }
         if(!correctArgs(args)) {
             return new CommandResult(ExitStatus.ERROR, "fatal: did not match some files\n");
         }
-        return moveAllToIndex(args);
-    }
-
-    private CommandResult moveAllToIndex(List<String> args) {
-        File index = new File(getGitPath() + "/index/");
-        if(index.exists() || (!index.exists() && index.mkdirs())) {
-            for (String fileName: args) {
-                if(fileName.startsWith("./")) {
-                    fileName = fileName.substring(1, fileName.length());
-                }
-                try {
-                    copyToIndex(fileName);
-                } catch (GitException e) {
-                    return new CommandResult(ExitStatus.ERROR, e.getMessage());
-                }
-            }
+        CommandResult result = copyAllToDir(args, "index");
+        if(result.getStatus() == ExitStatus.ERROR) {
+            return result;
         }
-        return new CommandResult(ExitStatus.SUCCESS, "added.\n");
-
-    }
-
-    private void copyToIndex(String source) throws GitException {
-        File sourceFile = new File(getCWD() + source);
-        File destinationFile = new File(getGitPath() + "/index/" + source);
-        if(!sourceFile.isHidden()) {
-            try {
-                if(sourceFile.isFile()) {
-                    FileUtils.copyFileToDirectory(sourceFile, destinationFile);
-                } else if(sourceFile.isDirectory()) {
-                    File[] files = sourceFile.listFiles(pathname -> !pathname.isHidden());
-                    if(files != null) {
-                        for (File file: files) {
-                            String shortPath = "/" + sourceFile.getName() + "/" + file.getName();
-                            copyToIndex(shortPath);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                throw new GitException("error while moving " + source + "\n");
-            }
-        }
+        return new CommandResult(ExitStatus.SUCCESS, "add: done!\n");
     }
 }

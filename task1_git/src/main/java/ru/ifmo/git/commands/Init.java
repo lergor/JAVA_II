@@ -15,19 +15,19 @@ public class Init implements Command {
     @Override
     public CommandResult execute(List<String> args) {
         if(!correctArgs(args)) {
-            return new CommandResult(ExitStatus.ERROR, "m_git: init: wrong arguments number");
+            return new CommandResult(ExitStatus.ERROR, "m_git: init: wrong arguments number\n");
         }
         gitDirectory = getGitDirectory();
         CommandResult result = new CommandResult(ExitStatus.SUCCESS);
         Message message = new Message();
         if(repositoryExists()) {
-            message.write("Reinitialized existing ");
+            message.write("reinitialized existing ");
         } else {
             if(initRepository()) {
-                message.write("Initialized empty ");
+                message.write("initialized empty ");
             } else {
                 result.setStatus(ExitStatus.FAILURE);
-                message.write("Fail to init ");
+                message.write("fail to init ");
             }
         }
         message.write("Git repository in " + gitDirectory.getAbsolutePath() + "\n");
@@ -49,39 +49,14 @@ public class Init implements Command {
     }
 
     private boolean createFiles() {
-        BranchInfo masterInfo = new BranchInfo("master", "");
+        HeadInfo masterInfo = new HeadInfo("master");
         String headInfo = (new Gson()).toJson(masterInfo);
-        return
-            createFile("/HEAD", headInfo);
+        return createFileWithContent("/HEAD", headInfo);
     }
 
     private boolean createDir(String dirName) {
         File newDir = new File(gitDirectory.getAbsolutePath() + dirName);
         return newDir.exists() || newDir.mkdirs();
-    }
-
-    private boolean createFile(String fileName, String content) {
-        File newFile = new File(gitDirectory.getAbsolutePath() + "/" + fileName);
-        boolean success = newFile.exists();
-        if(!success) {
-            try {
-                if(newFile.createNewFile()) {
-                    success = newFile.setReadable(true) && newFile.setWritable(true);
-                }
-            } catch (IOException e) {
-                success = false;
-            }
-        }
-        if(success) {
-            try(FileWriter writer = new FileWriter(newFile)) {
-                writer.write(content);
-                writer.flush();
-                writer.close();
-            } catch (IOException e) {
-                success = false;
-            }
-        }
-        return success;
     }
 
 }

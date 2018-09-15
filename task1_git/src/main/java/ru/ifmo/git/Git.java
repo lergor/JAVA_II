@@ -3,14 +3,16 @@ package ru.ifmo.git;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-//import net.sourceforge.argparse4j.ArgumentParsers;
-//import net.sourceforge.argparse4j.inf.*;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.*;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import ru.ifmo.git.commands.Add;
+import ru.ifmo.git.commands.Commit;
 import ru.ifmo.git.commands.Init;
-import ru.ifmo.git.util.BranchInfo;
+import ru.ifmo.git.commands.Log;
+import ru.ifmo.git.util.HeadInfo;
 import ru.ifmo.git.util.Command;
 import ru.ifmo.git.util.CommandResult;
 import ru.ifmo.git.util.GitException;
@@ -20,10 +22,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Git {
 
@@ -116,23 +115,24 @@ public class Git {
     public static void main(String[] args) {
 //        BranchInfo k  = new BranchInfo("master", "812932983");
 //        System.out.println(new GsonBuilder().create().toJson(k));
-        List<String> arguments = Collections.emptyList();
-        CommandResult res = null;
-        arguments = Arrays.asList("./kek", "lol", "ckkc");
-        System.out.println(arguments.subList(1, arguments.size()).toString());
+
+        CommandResult res;
 
 //        Init init = new Init();
 //        res = init.execute(Collections.emptyList());
-
-//        Add add = new Add();
-//        res = null;
-//        try {
-//            res = add.execute(arguments);
-//        } catch (GitException e) {
-//            System.out.println(e.getMessage());
-//        }
 //        System.out.print(res.getMessage().read());
 
+//        Add add = new Add();
+//        res = add.execute(Collections.singletonList("./kek"));
+//        System.out.print(res.getMessage().read());
+
+//        Commit commit = new Commit();
+//        res = commit.execute(Arrays.asList("message", "kek/"));
+//        System.out.print(res.getMessage().read());
+
+        Log log = new Log();
+        res = log.execute(Collections.emptyList());
+        System.out.print(res.getMessage().read());
     }
 
 
