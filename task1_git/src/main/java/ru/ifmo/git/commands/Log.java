@@ -1,57 +1,71 @@
 package ru.ifmo.git.commands;
 
-import com.google.gson.GsonBuilder;
-import org.apache.commons.io.IOUtils;
 import ru.ifmo.git.util.*;
 
 import java.io.*;
-import java.util.List;
+import java.util.*;
+import java.util.function.Predicate;
+
 
 public class Log implements Command {
 
+    private HeadInfo headInfo;
+
     @Override
     public boolean correctArgs(List<String> args) {
-        return args.size() <= 1;
+        return args.size() == 0 || (args.size() == 1 && args.get(0).length() > 6);
     }
 
     @Override
     public CommandResult execute(List<String> args) {
-        if(!repositoryExists()) {
-            return new CommandResult(ExitStatus.ERROR, "fatal: Not a git repository: .m_git\n");
-        }
-        if(!correctArgs(args)) {
-            return new CommandResult(ExitStatus.ERROR, "log: too many arguments\n");
-        }
         String logPath;
         try {
-            logPath = getHeadInfo().logFilePath;
+            checkRepoAndArgs(args);
+            headInfo = GitUtils.getHeadInfo();
+            logPath = headInfo.logFilePath;
         } catch (GitException e) {
             return new CommandResult(ExitStatus.ERROR, "error while reading HEAD\n");
         }
-        return readLog(new File(getGitPath() + "/" + logPath));
+        String revisionToStart = "";
+        if(args.size() == 1) {
+            revisionToStart = args.get(0);
+        }
+        return readLog(new File(GitUtils.getGitPath() + "/" + logPath), revisionToStart);
     }
 
-    private CommandResult readLog(File logFile) {
+    private CommandResult readLog(File logFile, String revision) {
         if(logFile.exists()) {
             Message logContent = new Message();
-            try(BufferedReader br = new BufferedReader(new FileReader(logFile))) {
-                for(String line; (line = br.readLine()) != null; ) {
-                    logContent.write(getCommitInfo(line + "\n"));
-                }
-            } catch (IOException e) {
-                return new CommandResult(ExitStatus.ERROR, "error while reading log\n");
+            List<CommitInfo> history;
+            try {
+                history = GitUtils.getHistory(logFile);
+            } catch (GitException e) {
+                return new CommandResult(ExitStatus.ERROR, e.getMessage());
             }
+            if(history.size() == 0) {
+                return emptyLogResult();
+            }
+            history.stream().filter(
+                    new Predicate<CommitInfo>() {
+
+                        private boolean include = (revision == null || revision.isEmpty());
+
+                        @Override
+                        public boolean test(CommitInfo commitInfo) {
+                            include = include || commitInfo.hash.startsWith(revision);
+                            return include;
+                        }
+                    }
+            ).forEach(info -> logContent.write(info.toString()));
             return new CommandResult(ExitStatus.SUCCESS, logContent);
         }
-        return new CommandResult(ExitStatus.FAILURE, "fatal: your current branch 'master' does not have any commits yet\n");
+        return emptyLogResult();
+
     }
 
-    private String getCommitInfo(String commitJson) {
-        CommitInfo commitInfo = new GsonBuilder().create().fromJson(commitJson, CommitInfo.class);
-        return  "commit " + commitInfo.hash + "\n" +
-                "Author:\t" + commitInfo.author + "\n" +
-                "Date:\t" + commitInfo.time + "\n" +
-                "\t\t" + commitInfo.message + "\n\n";
+    private CommandResult emptyLogResult() {
+        String failMessage = "fatal: your current branch '" + headInfo.branchName + "' does not have any commits yet\n";
+        return new CommandResult(ExitStatus.FAILURE, failMessage);
     }
 
 }

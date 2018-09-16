@@ -1,15 +1,9 @@
 package ru.ifmo.git.commands;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import ru.ifmo.git.Git;
+import ru.ifmo.git.masters.StorageMaster;
 import ru.ifmo.git.util.*;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Paths;
+import java.io.*;
 import java.util.*;
 
 public class Add implements Command {
@@ -30,16 +24,12 @@ public class Add implements Command {
 
     @Override
     public CommandResult execute(List<String> args) {
-        if(!repositoryExists()) {
-            return new CommandResult(ExitStatus.ERROR, "fatal: Not a git repository: .m_git\n");
+        try {
+            checkRepoAndArgs(args);
+            StorageMaster.copyAll(args,  ".", ".m_git/index");
+            return new CommandResult(ExitStatus.SUCCESS, "add: done!\n");
+        } catch (GitException e) {
+            return new CommandResult(ExitStatus.ERROR, "add: " + e.getMessage());
         }
-        if(!correctArgs(args)) {
-            return new CommandResult(ExitStatus.ERROR, "fatal: did not match some files\n");
-        }
-        CommandResult result = copyAllToDir(args, "index");
-        if(result.getStatus() == ExitStatus.ERROR) {
-            return result;
-        }
-        return new CommandResult(ExitStatus.SUCCESS, "add: done!\n");
     }
 }

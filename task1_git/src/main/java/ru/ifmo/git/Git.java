@@ -6,21 +6,10 @@ import com.google.gson.GsonBuilder;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.*;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import ru.ifmo.git.commands.Add;
-import ru.ifmo.git.commands.Commit;
-import ru.ifmo.git.commands.Init;
-import ru.ifmo.git.commands.Log;
-import ru.ifmo.git.util.HeadInfo;
-import ru.ifmo.git.util.Command;
-import ru.ifmo.git.util.CommandResult;
-import ru.ifmo.git.util.GitException;
+import org.apache.commons.io.*;
+import ru.ifmo.git.util.*;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -113,26 +102,35 @@ public class Git {
 //    }
 
     public static void main(String[] args) {
-//        BranchInfo k  = new BranchInfo("master", "812932983");
-//        System.out.println(new GsonBuilder().create().toJson(k));
-
         CommandResult res;
 
 //        Init init = new Init();
 //        res = init.execute(Collections.emptyList());
 //        System.out.print(res.getMessage().read());
-
+//
 //        Add add = new Add();
 //        res = add.execute(Collections.singletonList("./kek"));
 //        System.out.print(res.getMessage().read());
-
+//
 //        Commit commit = new Commit();
-//        res = commit.execute(Arrays.asList("message", "kek/"));
+//        res = commit.execute(Arrays.asList("lol", "kek/"));
 //        System.out.print(res.getMessage().read());
-
-        Log log = new Log();
-        res = log.execute(Collections.emptyList());
-        System.out.print(res.getMessage().read());
+//
+//        Commit commit2 = new Commit();
+//        res = commit2.execute(Arrays.asList("keeek", "kek/"));
+//        System.out.print(res.getMessage().read());
+//
+//        Log log = new Log();
+//        res = log.execute(Collections.emptyList());
+//        System.out.print(res.getMessage().read());
+//
+//        Checkout checkout = new Checkout();
+//        res = checkout.execute(Collections.singletonList("859a0eb99"));
+//        System.out.print(res.getMessage().read());
+//
+//        Reset reset = new Reset();
+//        res = reset.execute(Collections.singletonList("859a0eb99"));
+//        System.out.print(res.getMessage().read());
     }
 
 

@@ -8,12 +8,14 @@ with the following commands:<br/>
 init
 add <file>
 commit <message> <files>
-reset <to_revision>
-log [from_revision]
-checkout <revision>
+reset <from_commit>
+log [from_commit]
+checkout <commit>
 ```
 where *&lt;smth&gt;* means mandatory argument while *[smth]* 
-implies he optional one.
+implies he optional one.<br/>
+*commit* is represented as short (at least 7 symbols) or entire hash code.
+
 
 ### Usage
 
@@ -28,11 +30,7 @@ implies he optional one.
      *       {dir_as_hashcode}
      *           {files}
      *   index/
-     *   refs/
-     *       heads/
-     *           {txt_files_with_hashcode_for_head}
-     *   info/
-     *      {json_file_with_info_for_branch}
-     *   HEAD - file with current HEAD
+     *       {files}
+     *   HEAD - file with information about current state
      *
      * */

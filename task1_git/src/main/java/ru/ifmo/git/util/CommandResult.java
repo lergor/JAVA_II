@@ -1,6 +1,7 @@
 package ru.ifmo.git.util;
 
 public class CommandResult {
+
     private ExitStatus status;
     private Message message;
 

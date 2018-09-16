@@ -1,23 +1,27 @@
 package ru.ifmo.git.commands;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.io.IOUtils;
+import ru.ifmo.git.masters.StorageMaster;
 import ru.ifmo.git.util.*;
 
 import java.io.*;
 import java.util.*;
+import com.google.gson.Gson;
 
 public class Init implements Command {
 
     private File gitDirectory = null;
 
     @Override
+    public boolean correctArgs(List<String> args) {
+        return args == null || args.size() == 0;
+    }
+
+    @Override
     public CommandResult execute(List<String> args) {
         if(!correctArgs(args)) {
-            return new CommandResult(ExitStatus.ERROR, "m_git: init: wrong arguments number\n");
+            return new CommandResult(ExitStatus.ERROR, "init: wrong arguments\n");
         }
-        gitDirectory = getGitDirectory();
+        gitDirectory = GitUtils.getGitDirectory();
         CommandResult result = new CommandResult(ExitStatus.SUCCESS);
         Message message = new Message();
         if(repositoryExists()) {
@@ -26,7 +30,7 @@ public class Init implements Command {
             if(initRepository()) {
                 message.write("initialized empty ");
             } else {
-                result.setStatus(ExitStatus.FAILURE);
+                result.setStatus(ExitStatus.ERROR);
                 message.write("fail to init ");
             }
         }
@@ -39,24 +43,22 @@ public class Init implements Command {
         return gitDirectory.mkdir() && createDirs() && createFiles();
     }
 
+    private boolean createDir(String dirName) {
+        File newDir = new File(GitUtils.getGitPath() + dirName);
+        return newDir.exists() || newDir.mkdirs();
+    }
+
     private boolean createDirs() {
         return
                 createDir("/logs/") &&
                 createDir("/storage/") &&
-                createDir("/index/") &&
-                createDir("/info/") &&
-                createDir("/refs/heads/");
+                createDir("/index/");
     }
 
     private boolean createFiles() {
         HeadInfo masterInfo = new HeadInfo("master");
         String headInfo = (new Gson()).toJson(masterInfo);
-        return createFileWithContent("/HEAD", headInfo);
-    }
-
-    private boolean createDir(String dirName) {
-        File newDir = new File(gitDirectory.getAbsolutePath() + dirName);
-        return newDir.exists() || newDir.mkdirs();
+        return StorageMaster.createFileWithContent(GitUtils.getGitPath() + "/HEAD", headInfo);
     }
 
 }
