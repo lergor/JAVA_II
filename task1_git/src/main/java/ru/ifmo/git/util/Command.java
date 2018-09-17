@@ -1,24 +1,25 @@
 package ru.ifmo.git.util;
 
+import java.io.File;
 import java.util.*;
 
 public interface Command {
 
     default boolean repositoryExists() {
-        return GitUtils.getGitDirectory().exists();
+        return new File(GitTree.repo()).exists();
     }
 
-    boolean correctArgs(List<String> args);
+    boolean correctArgs(Map<String, Object> args);
 
-    default void checkRepoAndArgs(List<String> args) throws GitException {
-        if(!repositoryExists()) {
+    default void checkRepoAndArgs(Map<String, Object> args) throws GitException {
+        if (!repositoryExists()) {
             throw new GitException("fatal: Not a git repository: .m_git\n");
         }
-        if(!correctArgs(args)) {
-            throw  new GitException("wrong arguments\n");
+        if (!correctArgs(args)) {
+            throw new GitException("wrong arguments\n");
         }
     }
 
-    CommandResult execute(List<String> args) throws GitException;
+    CommandResult execute(Map<String, Object> args) throws GitException;
 
 }

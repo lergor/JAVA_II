@@ -39,4 +39,5 @@ public class CommandResult {
     public void setMessage(String message) {
         this.message = new Message(message);
     }
+
 }

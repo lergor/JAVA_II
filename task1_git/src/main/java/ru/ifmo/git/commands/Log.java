@@ -1,48 +1,48 @@
 package ru.ifmo.git.commands;
 
+import ru.ifmo.git.masters.*;
 import ru.ifmo.git.util.*;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Predicate;
-
 
 public class Log implements Command {
 
     private HeadInfo headInfo;
+    private String commit;
 
     @Override
-    public boolean correctArgs(List<String> args) {
-        return args.size() == 0 || (args.size() == 1 && args.get(0).length() > 6);
+    public boolean correctArgs(Map<String, Object> args) {
+        if (args.size() == 1) {
+            commit = (String) args.get("<commit>");
+            return true;
+        }
+        return (args.size() == 0);
     }
 
     @Override
-    public CommandResult execute(List<String> args) {
-        String logPath;
+    public CommandResult execute(Map<String, Object> args) {
         try {
             checkRepoAndArgs(args);
-            headInfo = GitUtils.getHeadInfo();
-            logPath = headInfo.logFilePath;
+            headInfo = FileMaster.getHeadInfo();
         } catch (GitException e) {
             return new CommandResult(ExitStatus.ERROR, "error while reading HEAD\n");
         }
-        String revisionToStart = "";
-        if(args.size() == 1) {
-            revisionToStart = args.get(0);
-        }
-        return readLog(new File(GitUtils.getGitPath() + "/" + logPath), revisionToStart);
+        return readLog(Paths.get(GitTree.log(), headInfo.branchName).toFile(), commit);
     }
 
     private CommandResult readLog(File logFile, String revision) {
-        if(logFile.exists()) {
+        if (logFile.exists()) {
             Message logContent = new Message();
             List<CommitInfo> history;
             try {
-                history = GitUtils.getHistory(logFile);
+                history = FileMaster.getHistory(logFile);
             } catch (GitException e) {
                 return new CommandResult(ExitStatus.ERROR, e.getMessage());
             }
-            if(history.size() == 0) {
+            if (history.size() == 0) {
                 return emptyLogResult();
             }
             history.stream().filter(
@@ -60,7 +60,6 @@ public class Log implements Command {
             return new CommandResult(ExitStatus.SUCCESS, logContent);
         }
         return emptyLogResult();
-
     }
 
     private CommandResult emptyLogResult() {

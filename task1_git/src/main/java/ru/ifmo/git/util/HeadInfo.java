@@ -5,7 +5,6 @@ public class HeadInfo {
     public String branchName;
     public String headHash;
     public String currentHash;
-    public String logFilePath;
 
     public HeadInfo() {
     }
@@ -14,7 +13,6 @@ public class HeadInfo {
         branchName = branch;
         headHash = "";
         currentHash = "";
-        logFilePath = "logs/" + branchName;
     }
 
     public void setHeadHash(String hash) {
@@ -22,9 +20,6 @@ public class HeadInfo {
     }
 
     public void setCurrentHash(String hash) {
-        if(currentHash.equals(headHash)) {
-            headHash = hash;
-        }
         currentHash = hash;
     }
 }

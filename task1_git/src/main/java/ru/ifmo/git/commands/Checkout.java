@@ -1,29 +1,34 @@
 package ru.ifmo.git.commands;
 
-import ru.ifmo.git.masters.StorageMaster;
+import ru.ifmo.git.masters.*;
 import ru.ifmo.git.util.*;
 
-import java.io.File;
-import java.util.List;
+import java.io.*;
+import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
 
 public class Checkout implements Command {
 
+    private String commit;
+
     @Override
-    public boolean correctArgs(List<String> args) {
-        return args.size() == 1 && args.get(0).length() > 6;
+    public boolean correctArgs(Map<String, Object> args) {
+        commit = (String) args.get("<commit>");
+        return commit.length() > 6;
     }
 
     @Override
-    public CommandResult execute(List<String> args) {
+    public CommandResult execute(Map<String, Object> args) {
         try {
             checkRepoAndArgs(args);
-            File commitDir = GitUtils.findCommitInStorage(args.get(0));
-            String storagePath = ".m_git/storage/" + commitDir.getName();
-            StorageMaster.copyDirToDir(storagePath, ".");
-            GitUtils.changeCurHash(commitDir.getName(), true);
-        } catch (GitException e) {
+            File commitDir = FileMaster.findCommitInStorage(commit);
+            FileUtils.copyDirectory(commitDir, new File(GitTree.cwd()));
+            FileMaster.changeCurHash(commitDir.getName(), false);
+        } catch (IOException | GitException e) {
             return new CommandResult(ExitStatus.ERROR, e.getMessage());
         }
         return new CommandResult(ExitStatus.SUCCESS, "checkout: done!");
     }
+
 }

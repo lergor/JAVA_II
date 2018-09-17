@@ -7,12 +7,14 @@ public class CommitInfo {
     public String message;
     public String branch;
 
-    public CommitInfo() {}
+    public CommitInfo() {
+    }
 
     public String toString() {
-        return  "commit " + hash + "\n" +
+        return "commit " + hash + "\n" +
                 "Author:\t" + author + "\n" +
                 "Date:\t" + time + "\n" +
                 "\t\t" + message + "\n\n";
     }
+
 }
