@@ -31,3 +31,14 @@ implies he optional one.<br/>
         index/
             [file]
          HEAD - file with information about current state
+
+
+### How to build and run
+
+In order to run this app, follow this steps:
+
+* clone this repository 
+* checkout on branch *task1_git*
+* run `./gradlew installDist`
+* go to the `./build/install/task1_git/bin/`
+* execute `task1_git` (or `task1_git.bat` on windows)

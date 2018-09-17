@@ -2,6 +2,9 @@ group 'ru.ifmo'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = "ru.ifmo.git.Git"
 
 sourceCompatibility = 1.8
 
