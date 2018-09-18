@@ -22,9 +22,9 @@ public class FileMaster {
         return history;
     }
 
-    public static HeadInfo getHeadInfo() throws GitException {
+    public static HeadInfo getHeadInfo(File headFile) throws GitException {
         String headJson;
-        try (FileInputStream inputStream = new FileInputStream(GitTree.head())) {
+        try (FileInputStream inputStream = new FileInputStream(headFile.getAbsolutePath())) {
             headJson = IOUtils.toString(inputStream);
         } catch (IOException e) {
             throw new GitException("error while reading HEAD\n");
@@ -42,7 +42,7 @@ public class FileMaster {
     }
 
     static public void changeCurHash(String newHash, boolean withHead) throws GitException {
-        HeadInfo headInfo = FileMaster.getHeadInfo();
+        HeadInfo headInfo = FileMaster.getHeadInfo(new File(GitTree.head()));
         headInfo.setCurrentHash(newHash);
         if (withHead) {
             headInfo.setHeadHash(newHash);

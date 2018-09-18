@@ -41,4 +41,4 @@ In order to run this app, follow this steps:
 * checkout on branch *task1_git*
 * run `./gradlew installDist`
 * go to the `./build/install/task1_git/bin/`
-* execute `task1_git` (or `task1_git.bat` on windows)
+* execute `task1_git` (or `task1_git.bat` on Windows)

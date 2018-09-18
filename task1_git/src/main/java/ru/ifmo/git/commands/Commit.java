@@ -34,8 +34,11 @@ public class Commit implements Command {
     @Override
     public CommandResult execute(Map<String, Object> args) {
         try {
+            if(!correctArgs(args)) {
+                return new CommandResult(ExitStatus.ERROR, "try git add first\n");
+            }
             checkRepoAndArgs(args);
-            headInfo = FileMaster.getHeadInfo();
+            headInfo = FileMaster.getHeadInfo(new File(GitTree.head()));
             setCommitInfo();
             StorageMaster.copyAll(files, Paths.get(GitTree.storage(), headInfo.currentHash).toFile());
             writeLog();

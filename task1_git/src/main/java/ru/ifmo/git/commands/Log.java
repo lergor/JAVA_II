@@ -26,7 +26,7 @@ public class Log implements Command {
     public CommandResult execute(Map<String, Object> args) {
         try {
             checkRepoAndArgs(args);
-            headInfo = FileMaster.getHeadInfo();
+            headInfo = FileMaster.getHeadInfo(new File(GitTree.head()));
         } catch (GitException e) {
             return new CommandResult(ExitStatus.ERROR, "error while reading HEAD\n");
         }
