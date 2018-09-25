@@ -78,15 +78,19 @@ public class GitCryptographer {
         return commit;
     }
 
-    public List<FileReference> formEncodeReferences(List<Path> files) throws IOException {
+    public List<FileReference> formEncodeReferences(List<Path> files) throws GitException {
         List<FileReference> references = new ArrayList<>();
         for (Path file : files) {
-            if(!Files.isHidden(file)) {
-                if(Files.isDirectory(file)) {
-                    references.addAll(treeCrypto.formEncodeReferences(file));
-                } else {
-                    references.add(fileCrypto.formEncodeReference(file));
+            try {
+                if(!Files.isHidden(file)) {
+                    if(Files.isDirectory(file)) {
+                        references.addAll(treeCrypto.formEncodeReferences(file));
+                    } else {
+                        references.add(fileCrypto.formEncodeReference(file));
+                    }
                 }
+            } catch (IOException e) {
+                throw new GitException(e.getMessage());
             }
         }
         return references;

@@ -76,12 +76,11 @@ public class GitFileKeeper {
         }
     }
 
-    public static boolean removeFile(Path file) {
+    public static void deleteFile(Path file) throws GitException {
         try {
             Files.deleteIfExists(file);
-            return true;
         } catch (IOException e) {
-            return false;
+            throw new GitException(e.getMessage());
         }
     }
 
@@ -99,9 +98,28 @@ public class GitFileKeeper {
         }
     }
 
-    static public void removeAll(List<Path> files) throws IOException {
-        for (Path file : files) {
-            Files.deleteIfExists(file);
+    static public void clearDirectory(Path directory) throws GitException {
+        try {
+            List<Path> files = Files.list(directory).collect(Collectors.toList());
+            removeAll(files);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new GitException("error while removing");
+        }
+    }
+
+    static public void removeAll(List<Path> files) throws GitException {
+        try{
+            for (Path file : files) {
+                if(Files.isRegularFile(file)) {
+                    deleteFile(file);
+                } else {
+                    clearDirectory(file);
+                    Files.deleteIfExists(file);
+                }
+            }
+        } catch (IOException e) {
+            throw new GitException(e.getMessage());
         }
     }
 }

@@ -56,15 +56,15 @@ public class GitParser {
 //        parserReset.addArgument("<commit>").type(String.class)
 //                .required(true);
 //
-//        Subparser parserLog = subparsers.addParser("log")
-//                .setDefault("cmd", new Log())
-//                .help("Show commit logs");
-//        parserLog.addArgument("<commit>").type(String.class).nargs("?");
-//
-//        Subparser parserCheckout = subparsers.addParser("checkout")
-//                .setDefault("cmd", new Checkout())
-//                .help("Switch branches or restore working tree files");
-//        parserCheckout.addArgument("<commit>").type(String.class);
+        Subparser parserLog = subparsers.addParser("log")
+                .setDefault("cmd", new Log())
+                .help("Show commit logs");
+        parserLog.addArgument("<commit>").type(String.class).nargs("?");
+
+        Subparser parserCheckout = subparsers.addParser("checkout")
+                .setDefault("cmd", new Checkout())
+                .help("Switch branches or restore working tree files");
+        parserCheckout.addArgument("<commit>").nargs(1).type(String.class);
 
     }
 

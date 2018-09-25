@@ -2,67 +2,33 @@ package ru.ifmo.git;
 
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
-import ru.ifmo.git.commands.GitCommand;
+import ru.ifmo.git.commands.*;
 import ru.ifmo.git.entities.GitParser;
 import ru.ifmo.git.util.*;
+
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Git {
 
     public static void main(String[] args) {
 
-//            String hash = "b4c66cf0e6c74712a4fd1344ff90ec52855430320";
-//            Optional<Path> commit = storage.findCommit(hash);
-//////
-//            if(commit.isPresent()) {
-//                System.out.println("-----");
-//                List<FileReference> refs = cryp.formDecodeReferences(commit.get());
-//                for (FileReference i : refs) {
-//                    System.out.println(i.name);
-//                }
-//                storage.restoreCommit(refs, clear);
-//            }
-
-
-            ///////////////////
-//            FileInfo info = GitCryptographer.decodeFile(file);
-//            System.out.println("-----");
-//            System.out.println("type: " + String.valueOf(info.type));
-//            System.out.println("name: " + info.name);
-//            System.out.println("name: " + info.localPath);
-//            info.content.forEach(s -> System.out.println(s + "!"));
-//
-//
-//            List<FileInfo> infos = cryp.decodeTree(file);
-//            for (FileInfo i: infos) {
-//                System.out.println("type: " + String.valueOf(i.type));
-//                System.out.println("name: " + i.name);
-//                System.out.println("name: " + i.localPath);
-//            }
-
-//            Path new_file = Paths.get("kek/res");
-//            Files.write(new_file, info.content, StandardCharsets.UTF_8);
-
-
-            ////////////////////////////////
-
-
-
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-
-//        GitСlerk cl = new GitСlerk(tr);
-
-
-
-
-//        args = new String[]{"init"};
+        args = new String[]{"init"};
         GitParser gitParser = new GitParser();
         try {
             Namespace ns = gitParser.parseArgs(args);
-            GitCommand command = (GitCommand) ns.getAttrs().remove("cmd");
-            CommandResult result = command.execute(ns.getAttrs());
+//            GitCommand command = (GitCommand) ns.getAttrs().remove("cmd");
+//            CommandResult result = command.execute(ns.getAttrs());
+//            CommandResult result = command.execute(ns.getAttrs());
+            GitCommand command = new Checkout(Paths.get("./clear"));
+            Map<String, Object> arrrgs = new LinkedHashMap<>();
+            arrrgs.put("<commit>", Collections.singletonList("c0bbb1a5f61c8c457fed673fd"));
+
+
+            CommandResult result = command.execute(arrrgs);
             if(result.getStatus() != ExitStatus.SUCCESS) {
                 System.out.println("exit with code " + result.getStatus());
             }

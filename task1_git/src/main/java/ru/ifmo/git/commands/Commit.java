@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 public class Commit implements GitCommand {
 
-    private HeadInfo headInfo;
     private CommitInfo commitInfo;
     private List<Path> files = new LinkedList<>();
     private GitTree gitTree;
@@ -30,7 +29,7 @@ public class Commit implements GitCommand {
         initEntities(cwd);
     }
 
-    void initEntities(Path cwd) {
+    private void initEntities(Path cwd) {
         gitTree = new GitTree(cwd);
         gitClerk = new GitClerk(gitTree);
         gitFileKeeper = new GitFileKeeper(gitTree);
@@ -56,87 +55,33 @@ public class Commit implements GitCommand {
     }
 
     @Override
-    public CommandResult execute(Map<String, Object> args) {
-        try {
-            if(!correctArgs(args)) {
-                return new CommandResult(ExitStatus.ERROR, "try git add first\n");
-            }
-            checkRepoAndArgs(args);
-            headInfo = FileMaster.getHeadInfo(new File(GitTree.head()));
-            setCommitInfo();
-            StorageMaster.copyAll(files, Paths.get(GitTree.storage(), headInfo.currentHash).toFile());
-            writeLog();
-            return new CommandResult(ExitStatus.SUCCESS, "commit: done!\n");
-        } catch (GitException e) {
-            return new CommandResult(ExitStatus.ERROR, "commit: " + e.getMessage());
-        }
-    }
-
-
-    @Override
-    public CommandResult doWork(Map<String, Object> args) throws GitException {
+    public CommandResult doWork(Map<String, Object> args) {
         if (!gitTree.exists()) {
             return new CommandResult(ExitStatus.ERROR, "fatal: not a m_git repository");
         }
-
-        
-            CommitInfo commitInfo = new CommitInfo();
-            commitInfo.setBranch("master");
-            commitInfo.setMessage("master?");
-            commitInfo.setRootDirectory(tr.repo());
-            commitInfo.setAuthor("lergor");
-            commitInfo.setTime("1234345678");
-            File[] files = tr.repo().toFile().listFiles();
-            List<Path> filess = Arrays.stream(files).map(File::toPath).filter(s -> !s.toFile().isHidden()).collect(Collectors.toList());
-            GitCryptographer cryp = new GitCryptographer(tr);
-            GitFileKeeper storage = new GitFileKeeper(tr.storage());
-
-
-
-            //////////////////
-
-            List<FileReference> refs1 = cryp.formEncodeReferences(commitInfo, filess);
-            for (FileReference i : refs1) {
-                System.out.println(i.name + " " + i.type);
-            }
-//            storage.saveCommit(refs1);
-
-        return null;
-    }
-
-
-    private void setCommitInfo() throws GitException {
-        commitInfo.author = System.getProperty("user.name");
-        commitInfo.message = message;
-        commitInfo.branch = headInfo.branchName;
-
-        DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy ZZ");
-        Calendar calendar = Calendar.getInstance();
-        commitInfo.time = df.format(calendar.getTime());
-
-        String name = String.valueOf(commitInfo.time.concat(String.valueOf(GitTree.cwd())).hashCode());
-        commitInfo.name = (UUID.randomUUID().toString() + name).replaceAll("-", "");
-
-        boolean moveHead = headInfo.headHash.equals(headInfo.currentHash);
-        FileMaster.changeCurHash(commitInfo.name, moveHead);
-    }
-
-    private void writeLog() throws GitException {
-        if (commitInfo.message.isEmpty()) {
-            getUserMessage();
+        try {
+            commitInfo = gitClerk.fillCommitInfo((String) args.getOrDefault("message", ""));
+            List<FileReference> references = gitCrypto.formEncodeReferences(files);
+            FileReference commitReference = gitCrypto.formHeaderReference(commitInfo.hash, files);
+            references.add(commitReference);
+            gitFileKeeper.saveCommit(references);
+            gitClerk.writeLog(commitInfo);
+            changeHeadInfo();
+            GitFileKeeper.clearDirectory(gitTree.index());
+        } catch (IOException | GitException e) {
+            return new CommandResult(ExitStatus.ERROR, e.getMessage());
         }
-        String logContent = (new Gson()).toJson(commitInfo);
-        String logFile = Paths.get(GitTree.log(), headInfo.branchName).toString();
-        FileMaster.writeToFile(logFile, logContent, true);
+        return new CommandResult(ExitStatus.SUCCESS, "commit: done!");
     }
 
-    private void getUserMessage() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
-            System.out.print("please enter message: ");
-            commitInfo.message = br.readLine();
-        } catch (IOException e) {
-            commitInfo.message = "no message";
+    private void changeHeadInfo() throws GitException {
+        HeadInfo headInfo = gitClerk.getHeadInfo();
+        if (headInfo.headHash == null || headInfo.headHash.equals(headInfo.currentHash)) {
+            headInfo.moveBoth(commitInfo.hash);
+        } else {
+            headInfo.moveCurrent(commitInfo.hash);
         }
+        gitClerk.changeHeadInfo(headInfo);
     }
 
 }

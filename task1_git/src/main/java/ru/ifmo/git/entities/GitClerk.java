@@ -15,6 +15,7 @@ import java.util.*;
 public class GitClerk {
 
     private final String ENCODING = "UTF-8";
+    private final String sep = System.getProperty("line.separator");
     private Gson gson = new GsonBuilder().create();
     private final GitTree gitTree;
 
@@ -33,19 +34,21 @@ public class GitClerk {
         return gson.fromJson(headJson, HeadInfo.class);
     }
 
-    public void changeHeadInfo(HeadInfo newHeadInfo) throws IOException {
+    public void changeHeadInfo(HeadInfo newHeadInfo) throws GitException {
         String newInfo = gson.toJson(newHeadInfo);
-        FileUtils.writeStringToFile(gitTree.head().toFile(), newInfo, ENCODING);
+        try {
+            FileUtils.writeStringToFile(gitTree.head().toFile(), newInfo, ENCODING);
+        } catch (IOException e) {
+            throw new GitException(e.getMessage());
+        }
     }
 
+
     public void writeLog(CommitInfo commit) throws GitException {
-        if (commit.message.isEmpty()) {
-            commit.message = getUserMessage();
-        }
         File logFile = gitTree.log().resolve(commit.branch).toFile();
         try {
             if(logFile.exists() || logFile.createNewFile()) {
-                writeToFile(logFile.toPath(), gson.toJson(commit), true);
+                writeToFile(logFile.toPath(), gson.toJson(commit) + sep, true);
             }
         } catch (IOException e) {
             throw new GitException(e.getMessage());
@@ -69,7 +72,7 @@ public class GitClerk {
         }
     }
 
-    public List<CommitInfo> getHistory() throws GitException {
+    public List<CommitInfo> getLogHistory() throws GitException {
         String branch = getHeadInfo().branchName;
         File logFile = gitTree.log().resolve(branch).toFile();
         List<CommitInfo> history = new ArrayList<>();
@@ -84,7 +87,7 @@ public class GitClerk {
     }
 
     public Optional<CommitInfo> findCommitInfo(String desiredCommit) throws GitException {
-        for (CommitInfo commit: getHistory()) {
+        for (CommitInfo commit: getLogHistory()) {
             if(commit.hash.startsWith(desiredCommit)) {
                 return Optional.of(commit);
             }
@@ -96,14 +99,7 @@ public class GitClerk {
         return System.getProperty("user.name");
     }
 
-    public static String getCommitMessage() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
-            System.out.print("please enter message: ");
-            return br.readLine();
-        } catch (IOException e) {
-            return "no message";
-        }
-    }
+
 
     private static String getCurrentTime() {
         DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy ZZ");
@@ -116,7 +112,7 @@ public class GitClerk {
         info.setAuthor(getAuthor());
         info.setTime(getCurrentTime());
         info.setRootDirectory(gitTree.repo());
-        info.setMessage(message.isEmpty() ? getUserMessage() : message);
+        info.setMessage(message == null ? getUserMessage() : message);
         info.setHash(GitCryptographer.createCommitHash(info));
         info.setBranch(getHeadInfo().branchName);
         return info;

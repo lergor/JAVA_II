@@ -14,6 +14,15 @@ public class Init implements GitCommand {
 
     private GitTree gitTree;
 
+    public Init() {
+        gitTree = new GitTree();
+    }
+
+    public Init(Path cwd) {
+        gitTree = new GitTree(cwd);
+    }
+
+
     @Override
     public boolean correctArgs(Map<String, Object> args) {
         return args.size() == 1 && Files.exists((Path) args.get("<directory>"));
@@ -38,7 +47,7 @@ public class Init implements GitCommand {
         return new CommandResult(ExitStatus.SUCCESS, message);
     }
 
-    private void writeHead() throws IOException {
+    private void writeHead() throws GitException {
         HeadInfo info = new HeadInfo();
         info.branchName = "master";
         GitClerk clerk = new GitClerk(gitTree);

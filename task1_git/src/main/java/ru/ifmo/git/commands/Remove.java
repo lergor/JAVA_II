@@ -44,7 +44,7 @@ public class Remove implements GitCommand {
             List<Path> filesInCWD = files.stream().map(gitTree.repo()::resolve).collect(Collectors.toList());
             GitFileKeeper.removeAll(filesInIndex);
             GitFileKeeper.removeAll(filesInCWD);
-        } catch (IOException e) {
+        } catch (GitException e) {
             return new CommandResult(ExitStatus.ERROR, "remove: " + e.getMessage());
         }
         return new CommandResult(ExitStatus.SUCCESS, "remove: done!\n");

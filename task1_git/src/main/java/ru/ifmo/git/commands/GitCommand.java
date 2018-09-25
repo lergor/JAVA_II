@@ -19,13 +19,14 @@ public interface GitCommand {
     default CommandResult execute(Map<String, Object> args) {
         String name = this.getClass().getSimpleName().toLowerCase();
         try {
-            if (!correctArgs(args)) {
-                return new CommandResult(ExitStatus.ERROR, name + ": wrong arguments");
+            if (correctArgs(args)) {
+                return doWork(args);
             }
-            return doWork(args);
         } catch (GitException e) {
             return new CommandResult(ExitStatus.ERROR, name + ": " + e.getMessage());
         }
+        return new CommandResult(ExitStatus.ERROR, name + ": wrong args");
+
     }
 
     default void checkFilesExist(List<Path> files) throws GitException {
