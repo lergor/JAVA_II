@@ -31,4 +31,8 @@ public class Message {
         os.reset();
     }
 
+    public void print() {
+        System.out.print(read());
+    }
+
 }

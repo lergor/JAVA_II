@@ -15,11 +15,17 @@ public class HeadInfo {
         currentHash = "";
     }
 
-    public void setHeadHash(String hash) {
+    public void moveHead(String hash) {
         headHash = hash;
     }
 
-    public void setCurrentHash(String hash) {
+    public void moveCurrent(String hash) {
         currentHash = hash;
     }
+
+    public void moveBoth(String hash) {
+        moveHead(hash);
+        moveCurrent(hash);
+    }
+
 }

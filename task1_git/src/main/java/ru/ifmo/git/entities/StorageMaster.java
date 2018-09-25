@@ -1,4 +1,4 @@
-package ru.ifmo.git.masters;
+package ru.ifmo.git.entities;
 
 import org.apache.commons.io.FileUtils;
 import ru.ifmo.git.util.*;
@@ -7,6 +7,15 @@ import java.io.*;
 import java.util.*;
 
 public class StorageMaster {
+
+    private File storage;
+    private final String ENCODING = "UTF_8";
+
+    public StorageMaster(File storage) {
+        this.storage = storage;
+    }
+
+    ///////////////////////////////////////////////
 
     static public void copyAll(List<File> args, File targetDir) throws GitException {
         if (targetDir.exists() || (!targetDir.exists() && targetDir.mkdirs())) {

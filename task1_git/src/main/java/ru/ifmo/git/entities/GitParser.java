@@ -1,8 +1,10 @@
-package ru.ifmo.git.masters;
+package ru.ifmo.git.entities;
 
 import net.sourceforge.argparse4j.*;
 import net.sourceforge.argparse4j.inf.*;
 import ru.ifmo.git.commands.*;
+
+import java.nio.file.Path;
 
 public class GitParser {
 
@@ -23,6 +25,8 @@ public class GitParser {
         Subparser parserInit = subparsers.addParser("init")
                 .setDefault("cmd", new Init())
                 .help("Create an empty Git repository or reinitialize an existing one");
+        parserInit.addArgument("<directory>")
+                    .type(Path.class).nargs("?").setDefault(GitTree.cwd());
 
         Subparser parserAdd = subparsers.addParser("add")
                 .setDefault("cmd", new Add())
@@ -30,27 +34,37 @@ public class GitParser {
         parserAdd.addArgument("<pathspec>").type(String.class)
                 .required(true).nargs("+");
 
+        Subparser parserRemove = subparsers.addParser("rm")
+                .setDefault("cmd", new Remove())
+                .help("Remove files from the working tree and from the index");
+        parserRemove.addArgument("<pathspec>").type(String.class)
+                .required(true).nargs("+");
+
+//        Subparser parserStatus = subparsers.addParser("status")
+//                .setDefault("cmd", new Status())
+//                .help("Show current state of the repository");
+
         Subparser parserCommit = subparsers.addParser("commit")
                 .setDefault("cmd", new Commit())
                 .help("Record changes to the repository");
-        parserCommit.addArgument("message").type(String.class);
+        parserCommit.addArgument("-m", "--message").nargs(1).type(String.class);
         parserCommit.addArgument("<pathspec>").type(String.class).nargs("+");
 
-        Subparser parserReset = subparsers.addParser("reset")
-                .setDefault("cmd", new Reset())
-                .help("Reset current HEAD to the specified state");
-        parserReset.addArgument("<commit>").type(String.class)
-                .required(true);
-
-        Subparser parserLog = subparsers.addParser("log")
-                .setDefault("cmd", new Log())
-                .help("Show commit logs");
-        parserLog.addArgument("<commit>").type(String.class).nargs("?");
-
-        Subparser parserCheckout = subparsers.addParser("checkout")
-                .setDefault("cmd", new Checkout())
-                .help("Switch branches or restore working tree files");
-        parserCheckout.addArgument("<commit>").type(String.class);
+//        Subparser parserReset = subparsers.addParser("reset")
+//                .setDefault("cmd", new Reset())
+//                .help("Reset current HEAD to the specified state");
+//        parserReset.addArgument("<commit>").type(String.class)
+//                .required(true);
+//
+//        Subparser parserLog = subparsers.addParser("log")
+//                .setDefault("cmd", new Log())
+//                .help("Show commit logs");
+//        parserLog.addArgument("<commit>").type(String.class).nargs("?");
+//
+//        Subparser parserCheckout = subparsers.addParser("checkout")
+//                .setDefault("cmd", new Checkout())
+//                .help("Switch branches or restore working tree files");
+//        parserCheckout.addArgument("<commit>").type(String.class);
 
     }
 

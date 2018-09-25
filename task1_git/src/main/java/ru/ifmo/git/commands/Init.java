@@ -1,66 +1,47 @@
 package ru.ifmo.git.commands;
 
-import ru.ifmo.git.masters.*;
+import ru.ifmo.git.entities.GitClerk;
+import ru.ifmo.git.entities.GitFileKeeper;
+import ru.ifmo.git.entities.GitTree;
 import ru.ifmo.git.util.*;
 
-import java.io.*;
-import java.nio.file.Paths;
-import java.util.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 
-import com.google.gson.Gson;
+public class Init implements GitCommand {
 
-public class Init implements Command {
-
-    private File gitDirectory = null;
+    private GitTree gitTree;
 
     @Override
     public boolean correctArgs(Map<String, Object> args) {
-        return args == null || args.size() == 0;
+        return args.size() == 1 && Files.exists((Path) args.get("<directory>"));
     }
 
     @Override
-    public CommandResult execute(Map<String, Object> args) {
-        if (!correctArgs(args)) {
-            return new CommandResult(ExitStatus.ERROR, "init: wrong arguments\n");
-        }
-        gitDirectory = Paths.get(GitTree.repo()).toFile();
-        CommandResult result = new CommandResult(ExitStatus.SUCCESS);
+    public CommandResult doWork(Map<String, Object> args) throws GitException {
+        gitTree = new GitTree((Path) args.get("<directory>"));
         Message message = new Message();
-        if (repositoryExists()) {
-            message.write("reinitialized existing ");
-        } else {
-            if (initRepository()) {
+        if (!gitTree.exists()) {
+            try {
+                gitTree.createGitTree();
                 message.write("initialized empty ");
-            } else {
-                result.setStatus(ExitStatus.ERROR);
-                message.write("fail to init ");
+                writeHead();
+            } catch (IOException e) {
+                return new CommandResult(ExitStatus.FAILURE, "unable to create repository in " + gitTree.repo());
             }
+        } else {
+            message.write("reinitialized existing ");
         }
-        message.write("Git repository in " + gitDirectory.getAbsolutePath() + "\n");
-        result.setMessage(message);
-        return result;
+        message.write("Git repository in " + gitTree.repo() + "\n");
+        return new CommandResult(ExitStatus.SUCCESS, message);
     }
 
-    private boolean initRepository() {
-        return gitDirectory.mkdir() && createDirs() && createFiles();
+    private void writeHead() throws IOException {
+        HeadInfo info = new HeadInfo();
+        info.branchName = "master";
+        GitClerk clerk = new GitClerk(gitTree);
+        clerk.changeHeadInfo(info);
     }
-
-    private boolean createDir(String dirName) {
-        File newDir = Paths.get(GitTree.repo(), dirName).toFile();
-        return newDir.exists() || newDir.mkdirs();
-    }
-
-    private boolean createDirs() {
-        return
-                createDir("/logs/") &&
-                        createDir("/storage/") &&
-                        createDir("/index/");
-    }
-
-    private boolean createFiles() {
-        HeadInfo masterInfo = new HeadInfo("master");
-        String headInfo = (new Gson()).toJson(masterInfo);
-        return StorageMaster.createFileWithContent(GitTree.head(), headInfo);
-    }
-
 }

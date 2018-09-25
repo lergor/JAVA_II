@@ -1,42 +1,54 @@
 package ru.ifmo.git.commands;
 
-import ru.ifmo.git.masters.*;
+import ru.ifmo.git.entities.*;
 import ru.ifmo.git.util.*;
 
-import java.io.*;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class Add implements Command {
+public class Add implements GitCommand {
 
-    private List<File> files = new LinkedList<>();
+    private List<Path> files;
+    private GitTree gitTree;
 
-    @Override
-    public boolean correctArgs(Map<String, Object> args) {
-        if (args.isEmpty()) {
-            return false;
-        }
-        //noinspection unchecked
-        List<String> fileNames = ((List<String>) args.get("<pathspec>"));
-        for (String fileName : fileNames) {
-            File file = Paths.get(GitTree.cwd(), fileName).toFile();
-            if (!file.exists()) {
-                return false;
-            }
-            files.add(file);
-        }
-        return true;
+    public Add() {
+        gitTree = new GitTree();
+    }
+
+    public Add(Path cwd) {
+        gitTree = new GitTree(cwd);
+    }
+
+    private List<Path> getArgs(Map<String, Object> args) {
+        return ((List<String>) args.get("<pathspec>"))
+                .stream()
+                .map(s -> Paths.get(s).normalize())
+                .collect(Collectors.toList());
     }
 
     @Override
-    public CommandResult execute(Map<String, Object> args) {
+    public boolean correctArgs(Map<String, Object> args) throws GitException {
+        if (!args.isEmpty()) {
+            List<Path> files = getArgs(args);
+            checkFilesExist(files);
+            this.files = files;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public CommandResult doWork(Map<String, Object> args) throws GitException {
+        if (!gitTree.exists()) {
+            return new CommandResult(ExitStatus.ERROR, "fatal: not a m_git repository");
+        }
         try {
-            checkRepoAndArgs(args);
-            StorageMaster.copyAll(files, new File(GitTree.index()));
-            return new CommandResult(ExitStatus.SUCCESS, "add: done!\n");
-        } catch (GitException e) {
-            return new CommandResult(ExitStatus.ERROR, "add: " + e.getMessage());
+            GitFileKeeper.copyAll(files, gitTree.index());
+        } catch (IOException e) {
+            throw new GitException(e.getMessage());
         }
+        return new CommandResult(ExitStatus.SUCCESS, "add: done!\n");
     }
-
 }
