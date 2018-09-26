@@ -19,13 +19,7 @@ public class GitFileKeeper {
         storage = gitTree.storage();
     }
 
-    public static Path withDir(Path file) {
-        String fileName = file.toFile().getName();
-        return Paths.get(fileName.substring(0, dirNameLen),
-                fileName.substring(dirNameLen)).toAbsolutePath();
-    }
-
-    public Path getDir(String blob) {
+    private Path getDir(String blob) {
         return storage.resolve(blob.substring(0, dirNameLen));
     }
 
@@ -35,7 +29,7 @@ public class GitFileKeeper {
 
     private Path filePath(String blob) throws IOException {
         Path directory = getDir(blob);
-        if(Files.notExists(directory)) {
+        if (Files.notExists(directory)) {
             boolean ignored = directory.toFile().mkdirs();
         }
         return directory.resolve(blob.substring(dirNameLen));
@@ -44,21 +38,16 @@ public class GitFileKeeper {
     public void saveCommit(List<FileReference> references) throws IOException {
         for (FileReference reference : references) {
             Path file = filePath(reference.name);
-            Files.copy(reference.content, file, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
-    public void saveToIndex(List<FileReference> references) throws IOException {
-        for (FileReference reference : references) {
-            Path file = gitTree.index().resolve(reference.name);
-            Files.copy(reference.content, file, StandardCopyOption.REPLACE_EXISTING);
+            if(Files.notExists(file)) {
+                Files.copy(reference.content, file, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
     }
 
     public Optional<Path> findFileInStorage(String hash) throws IOException {
         List<Path> blobs = Files.list(getDir(hash)).collect(Collectors.toList());
-        for (Path blob: blobs) {
-            if(blob.getFileName().startsWith(hash.substring(dirNameLen))) {
+        for (Path blob : blobs) {
+            if (blob.toFile().getName().startsWith(hash.substring(dirNameLen))) {
                 return Optional.of(blob);
             }
         }
@@ -68,7 +57,7 @@ public class GitFileKeeper {
     public void restoreCommit(List<FileReference> references, Path destination) throws IOException {
         for (FileReference reference : references) {
             Path file = destination.resolve(reference.name);
-            if(reference.type.equals(BlobType.FILE)) {
+            if (reference.type.equals(BlobType.FILE)) {
                 Files.copy(reference.content, file, StandardCopyOption.REPLACE_EXISTING);
             } else {
                 boolean ignored = file.toFile().mkdirs();
@@ -103,19 +92,20 @@ public class GitFileKeeper {
             List<Path> files = Files.list(directory).collect(Collectors.toList());
             removeAll(files);
         } catch (IOException e) {
-            e.printStackTrace();
             throw new GitException("error while removing");
         }
     }
 
     static public void removeAll(List<Path> files) throws GitException {
-        try{
+        try {
             for (Path file : files) {
-                if(Files.isRegularFile(file)) {
-                    deleteFile(file);
-                } else {
-                    clearDirectory(file);
-                    Files.deleteIfExists(file);
+                if (!Files.isHidden(file) && !Files.isExecutable(file)) {
+                    if (Files.isRegularFile(file)) {
+                        deleteFile(file);
+                    } else {
+                        clearDirectory(file);
+                        Files.deleteIfExists(file);
+                    }
                 }
             }
         } catch (IOException e) {

@@ -10,11 +10,14 @@ The following commands are available:<br/>
 ```
 init
 add <file>
+rm <file>
+status
 commit <message> <files>
 reset <to_commit>
 log [from_commit]
 checkout <commit>
 ```
+
 where *&lt;smth&gt;* means mandatory argument while *[smth]* 
 implies he optional one.<br/>
 *commit* is represented as short (at least 7 symbols) or entire hash code.

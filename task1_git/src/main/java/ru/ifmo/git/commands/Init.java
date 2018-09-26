@@ -1,27 +1,15 @@
 package ru.ifmo.git.commands;
 
-import ru.ifmo.git.entities.GitClerk;
-import ru.ifmo.git.entities.GitFileKeeper;
-import ru.ifmo.git.entities.GitTree;
+import ru.ifmo.git.entities.*;
 import ru.ifmo.git.util.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.Map;
 
 public class Init implements GitCommand {
 
-    private GitTree gitTree;
-
-    public Init() {
-        gitTree = new GitTree();
-    }
-
-    public Init(Path cwd) {
-        gitTree = new GitTree(cwd);
-    }
-
+    private GitAssembly git;
 
     @Override
     public boolean correctArgs(Map<String, Object> args) {
@@ -30,27 +18,28 @@ public class Init implements GitCommand {
 
     @Override
     public CommandResult doWork(Map<String, Object> args) throws GitException {
-        gitTree = new GitTree((Path) args.get("<directory>"));
+        git = new GitAssembly((Path) args.get("<directory>"));
         Message message = new Message();
-        if (!gitTree.exists()) {
+        if (!git.tree().exists()) {
             try {
-                gitTree.createGitTree();
+                git.tree().createGitTree();
                 message.write("initialized empty ");
                 writeHead();
             } catch (IOException e) {
-                return new CommandResult(ExitStatus.FAILURE, "unable to create repository in " + gitTree.repo());
+                String msg = "unable to create repository in " + git.tree().repo();
+                return new CommandResult(ExitStatus.FAILURE, msg);
             }
         } else {
             message.write("reinitialized existing ");
         }
-        message.write("Git repository in " + gitTree.repo() + "\n");
+        message.write("Git repository in " + git.tree().repo());
         return new CommandResult(ExitStatus.SUCCESS, message);
     }
 
     private void writeHead() throws GitException {
         HeadInfo info = new HeadInfo();
         info.branchName = "master";
-        GitClerk clerk = new GitClerk(gitTree);
+        GitClerk clerk = new GitClerk(git.tree());
         clerk.changeHeadInfo(info);
     }
 }

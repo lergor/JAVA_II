@@ -26,7 +26,7 @@ public class GitParser {
                 .setDefault("cmd", new Init())
                 .help("Create an empty Git repository or reinitialize an existing one");
         parserInit.addArgument("<directory>")
-                    .type(Path.class).nargs("?").setDefault(GitTree.cwd());
+                .type(Path.class).nargs("?").setDefault(GitAssembly.cwd());
 
         Subparser parserAdd = subparsers.addParser("add")
                 .setDefault("cmd", new Add())
@@ -40,22 +40,20 @@ public class GitParser {
         parserRemove.addArgument("<pathspec>").type(String.class)
                 .required(true).nargs("+");
 
-//        Subparser parserStatus = subparsers.addParser("status")
-//                .setDefault("cmd", new Status())
-//                .help("Show current state of the repository");
+        Subparser parserStatus = subparsers.addParser("status")
+                .setDefault("cmd", new Status())
+                .help("Show current state of the repository");
 
         Subparser parserCommit = subparsers.addParser("commit")
                 .setDefault("cmd", new Commit())
                 .help("Record changes to the repository");
-        parserCommit.addArgument("-m", "--message").nargs(1).type(String.class);
-        parserCommit.addArgument("<pathspec>").type(String.class).nargs("+");
+        parserCommit.addArgument("-m", "--message").nargs("?").type(String.class);
 
-//        Subparser parserReset = subparsers.addParser("reset")
-//                .setDefault("cmd", new Reset())
-//                .help("Reset current HEAD to the specified state");
-//        parserReset.addArgument("<commit>").type(String.class)
-//                .required(true);
-//
+        Subparser parserReset = subparsers.addParser("reset")
+                .setDefault("cmd", new Reset())
+                .help("Reset current HEAD to the specified state");
+        parserReset.addArgument("<commit>").nargs("?").type(String.class);
+
         Subparser parserLog = subparsers.addParser("log")
                 .setDefault("cmd", new Log())
                 .help("Show commit logs");
@@ -64,7 +62,7 @@ public class GitParser {
         Subparser parserCheckout = subparsers.addParser("checkout")
                 .setDefault("cmd", new Checkout())
                 .help("Switch branches or restore working tree files");
-        parserCheckout.addArgument("<commit>").nargs(1).type(String.class);
+        parserCheckout.addArgument("<commit>").nargs("?").type(String.class);
 
     }
 

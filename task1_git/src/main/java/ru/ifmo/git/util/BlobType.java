@@ -13,9 +13,12 @@ public enum BlobType {
 
     public String asString() {
         switch (this) {
-            case FILE: return "fl\\";
-            case TREE: return "tr\\";
-            case COMMIT: return "cm\\";
+            case FILE:
+                return "fl\\";
+            case TREE:
+                return "tr\\";
+            case COMMIT:
+                return "cm\\";
         }
         return "";
     }

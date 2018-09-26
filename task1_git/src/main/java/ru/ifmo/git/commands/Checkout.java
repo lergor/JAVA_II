@@ -5,44 +5,33 @@ import ru.ifmo.git.util.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class Checkout implements GitCommand {
 
     private Path commitFile;
-    private GitTree gitTree;
-    private GitClerk gitClerk;
-    private GitFileKeeper gitFileKeeper;
-    private GitCryptographer gitCrypto;
+    private GitAssembly git;
 
     public Checkout() {
-        initEntities(GitTree.cwd());
+        git = new GitAssembly(GitAssembly.cwd());
     }
 
     public Checkout(Path cwd) {
-        initEntities(cwd);
-    }
-
-    private void initEntities(Path cwd) {
-        gitTree = new GitTree(cwd);
-        gitClerk = new GitClerk(gitTree);
-        gitFileKeeper = new GitFileKeeper(gitTree);
-        gitCrypto = new GitCryptographer(gitTree);
+        git = new GitAssembly(cwd);
     }
 
     @Override
     public boolean correctArgs(Map<String, Object> args) throws GitException {
-        String commitHash = (String) args.get("<commitHash>");
-        if(commitHash.length() > 6) {
+        String commitHash = (String) args.get("<commit>");
+        if (commitHash.length() > 6) {
             try {
-                Optional<Path> commit = gitFileKeeper.findFileInStorage(commitHash);
-                if(commit.isPresent()) {
+                Optional<Path> commit = git.fileKeeper().findFileInStorage(commitHash);
+                if (commit.isPresent()) {
                     commitFile = commit.get();
                     return true;
                 }
             } catch (IOException e) {
+                e.printStackTrace();
                 throw new GitException(e.getMessage());
             }
         }
@@ -51,16 +40,13 @@ public class Checkout implements GitCommand {
 
     @Override
     public CommandResult doWork(Map<String, Object> args) throws GitException {
-        if (!gitTree.exists()) {
+        if (!git.tree().exists()) {
             return new CommandResult(ExitStatus.ERROR, "fatal: not a m_git repository");
         }
         try {
-            List<FileReference> references = gitCrypto.formDecodeReferences(commitFile);
-            for (FileReference i : references) {
-                System.out.println(i.name);
-            }
-            GitFileKeeper.clearDirectory(gitTree.repo());
-            gitFileKeeper.restoreCommit(references, gitTree.repo());
+            List<FileReference> references = git.crypto().formDecodeReferences(commitFile);
+            GitFileKeeper.clearDirectory(git.tree().repo());
+            git.fileKeeper().restoreCommit(references, git.tree().repo());
             changeHeadInfo();
         } catch (IOException e) {
             throw new GitException(e.getMessage());
@@ -70,9 +56,8 @@ public class Checkout implements GitCommand {
     }
 
     private void changeHeadInfo() throws GitException {
-        HeadInfo headInfo = gitClerk.getHeadInfo();
-        headInfo.moveCurrent(commitFile.toFile().getName());
-        gitClerk.changeHeadInfo(headInfo);
+        HeadInfo headInfo = git.clerk().getHeadInfo();
+        headInfo.moveCurrent(commitFile.getParent().toFile().getName() + commitFile.toFile().getName());
+        git.clerk().changeHeadInfo(headInfo);
     }
-
 }

@@ -8,7 +8,6 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-
 public class GitCryptographer {
 
     private final BlobType type = BlobType.COMMIT;
@@ -25,7 +24,7 @@ public class GitCryptographer {
     }
 
     public String getHash(Path file) throws IOException {
-        if(file.toFile().isFile()) {
+        if (file.toFile().isFile()) {
             return fileCrypto.getHash(file);
         }
         return treeCrypto.getHash(file);
@@ -34,14 +33,15 @@ public class GitCryptographer {
     public static String createHash() {
         return DigestUtils.sha1Hex(UUID.randomUUID().toString());
     }
+
     public static String createCommitHash(CommitInfo info) {
         String builder = info.time + info.rootDirectory +
-                         info.author + info.branch;
+                info.author + info.branch;
         return DigestUtils.sha1Hex(builder);
     }
 
     private BlobType getMarker(Path file) {
-        if(Files.isDirectory(file)) {
+        if (Files.isDirectory(file)) {
             return BlobType.TREE;
         }
         return BlobType.FILE;
@@ -61,13 +61,8 @@ public class GitCryptographer {
         return IOUtils.toInputStream(builder.toString(), "UTF-8");
     }
 
-//    private Path getTreePath(List<String> lines) {
-//        String[] HashAndName = lines.get(1).split("\t");
-//        return Paths.get(withoutMarker(HashAndName[0]));
-//    }
-
     public List<FileReference> formDecodeReferences(Path commitFile) throws IOException {
-       return treeCrypto.decodeTree(commitFile, new GitFileKeeper(gitTree));
+        return treeCrypto.decodeTree(commitFile, new GitFileKeeper(gitTree));
     }
 
     public FileReference formHeaderReference(String hash, List<Path> files) throws IOException {
@@ -82,8 +77,8 @@ public class GitCryptographer {
         List<FileReference> references = new ArrayList<>();
         for (Path file : files) {
             try {
-                if(!Files.isHidden(file)) {
-                    if(Files.isDirectory(file)) {
+                if (!Files.isHidden(file)) {
+                    if (Files.isDirectory(file)) {
                         references.addAll(treeCrypto.formEncodeReferences(file));
                     } else {
                         references.add(fileCrypto.formEncodeReference(file));

@@ -1,14 +1,9 @@
 package ru.ifmo.git.commands;
 
-import ru.ifmo.git.util.CommandResult;
-import ru.ifmo.git.util.ExitStatus;
-import ru.ifmo.git.util.GitException;
+import ru.ifmo.git.util.*;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.*;
+import java.util.*;
 
 public interface GitCommand {
 

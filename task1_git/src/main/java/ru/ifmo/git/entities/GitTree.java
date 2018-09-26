@@ -13,7 +13,7 @@ public class GitTree {
     private Path headFile;
 
     public GitTree() {
-        setRepository(cwd());
+        setRepository(GitAssembly.cwd());
     }
 
     public GitTree(Path repository) {
@@ -63,9 +63,5 @@ public class GitTree {
     
     public boolean exists() {
         return Files.exists(gitDir);
-    }
-
-    public static Path cwd() {
-        return Paths.get(".").toAbsolutePath().normalize();
     }
 }

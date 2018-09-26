@@ -9,12 +9,6 @@ public class HeadInfo {
     public HeadInfo() {
     }
 
-    public HeadInfo(String branch) {
-        branchName = branch;
-        headHash = "";
-        currentHash = "";
-    }
-
     public void moveHead(String hash) {
         headHash = hash;
     }
@@ -27,5 +21,4 @@ public class HeadInfo {
         moveHead(hash);
         moveCurrent(hash);
     }
-
 }

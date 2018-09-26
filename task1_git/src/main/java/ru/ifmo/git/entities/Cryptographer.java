@@ -15,6 +15,7 @@ public interface Cryptographer {
     String tab = "\t";
 
     String marker();
+
     InputStream formContent(Path file) throws IOException;
 
     default BlobType readMarker(String infoString) {
@@ -36,12 +37,12 @@ public interface Cryptographer {
 
     default String getHash(Path file) throws IOException {
         InputStream fileContent = formContent(file);
-        String filePath = file.toAbsolutePath().normalize().toString();
+        String filePath = file.toFile().getName();
         fileContent = new SequenceInputStream(
                 fileContent,
                 IOUtils.toInputStream(filePath)
         );
-        return  DigestUtils.sha1Hex(fileContent);
+        return DigestUtils.sha1Hex(fileContent);
     }
 
     default InputStream encodeFile(Path file) throws IOException {

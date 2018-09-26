@@ -11,14 +11,14 @@ import java.util.stream.Collectors;
 public class Add implements GitCommand {
 
     private List<Path> files;
-    private GitTree gitTree;
+    private GitAssembly git;
 
     public Add() {
-        gitTree = new GitTree();
+        git = new GitAssembly(GitAssembly.cwd());
     }
 
     public Add(Path cwd) {
-        gitTree = new GitTree(cwd);
+        git = new GitAssembly(cwd);
     }
 
     private List<Path> getArgs(Map<String, Object> args) {
@@ -41,14 +41,14 @@ public class Add implements GitCommand {
 
     @Override
     public CommandResult doWork(Map<String, Object> args) throws GitException {
-        if (!gitTree.exists()) {
+        if (!git.tree().exists()) {
             return new CommandResult(ExitStatus.ERROR, "fatal: not a m_git repository");
         }
         try {
-            GitFileKeeper.copyAll(files, gitTree.index());
+            GitFileKeeper.copyAll(files, git.tree().index());
         } catch (IOException e) {
             throw new GitException(e.getMessage());
         }
-        return new CommandResult(ExitStatus.SUCCESS, "add: done!\n");
+        return new CommandResult(ExitStatus.SUCCESS, "add: done!");
     }
 }

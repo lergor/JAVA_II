@@ -8,14 +8,13 @@ import ru.ifmo.git.util.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.text.*;
 import java.util.*;
 
 public class GitClerk {
 
-    private final String ENCODING = "UTF-8";
-    private final String sep = System.getProperty("line.separator");
+    public static final String ENCODING = "UTF-8";
+    public static final String sep = System.getProperty("line.separator");
     private Gson gson = new GsonBuilder().create();
     private final GitTree gitTree;
 
@@ -116,10 +115,6 @@ public class GitClerk {
         info.setHash(GitCryptographer.createCommitHash(info));
         info.setBranch(getHeadInfo().branchName);
         return info;
-    }
-
-    public CommitInfo fillAddInfo() throws GitException {
-        return fillCommitInfo("add");
     }
 
     public Map<String, String> collectFilesInfo(Path encodedFile) throws IOException {

@@ -3,7 +3,6 @@ package ru.ifmo.git.commands;
 import ru.ifmo.git.entities.*;
 import ru.ifmo.git.util.*;
 
-import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -11,26 +10,15 @@ import java.util.function.Predicate;
 
 public class Log implements GitCommand {
 
-    private HeadInfo headInfo;
     private String commit;
-    private GitTree gitTree;
-    private GitClerk gitClerk;
-    private GitFileKeeper gitFileKeeper;
-    private GitCryptographer gitCrypto;
+    private GitAssembly git;
 
     public Log() {
-        initEntities(GitTree.cwd());
+        git = new GitAssembly(GitAssembly.cwd());
     }
 
     public Log(Path cwd) {
-        initEntities(cwd);
-    }
-
-    private void initEntities(Path cwd) {
-        gitTree = new GitTree(cwd);
-        gitClerk = new GitClerk(gitTree);
-        gitFileKeeper = new GitFileKeeper(gitTree);
-        gitCrypto = new GitCryptographer(gitTree);
+        git = new GitAssembly(cwd);
     }
 
     @Override
@@ -41,19 +29,19 @@ public class Log implements GitCommand {
 
     @Override
     public CommandResult doWork(Map<String, Object> args) throws GitException {
-        if (!gitTree.exists()) {
+        if (!git.tree().exists()) {
             return new CommandResult(ExitStatus.ERROR, "fatal: not a m_git repository");
         }
         return readLog(commit);
     }
 
 
-    private CommandResult readLog(String revision) {
-        if (Files.exists(gitTree.log())) {
+    private CommandResult readLog(String revision) throws GitException {
+        if (Files.exists(git.tree().log())) {
             Message logContent = new Message();
             List<CommitInfo> history;
             try {
-                history = gitClerk.getLogHistory();
+                history = git.clerk().getLogHistory();
             } catch (GitException e) {
                 return new CommandResult(ExitStatus.ERROR, e.getMessage());
             }
@@ -77,9 +65,9 @@ public class Log implements GitCommand {
         return emptyLogResult();
     }
 
-    private CommandResult emptyLogResult() {
+    private CommandResult emptyLogResult() throws GitException {
+        HeadInfo headInfo = git.clerk().getHeadInfo();
         String failMessage = "fatal: your current branch '" + headInfo.branchName + "' does not have any commits yet\n";
         return new CommandResult(ExitStatus.FAILURE, failMessage);
     }
-
 }
