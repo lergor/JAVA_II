@@ -1,45 +1,40 @@
 package ru.ifmo.git.commands;
 
-import ru.ifmo.git.entities.*;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import ru.ifmo.git.entities.GitManager;
+import ru.ifmo.git.entities.GitTree;
 import ru.ifmo.git.util.*;
 
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.Map;
-
+@Command(
+        name = "init",
+        description = "Create an empty Git repository or reinitialize an existing one",
+        helpCommand = true
+)
 public class Init implements GitCommand {
 
-    private GitAssembly git;
+    @Parameters(arity = "?", paramLabel = "directory")
+    private Path repositoryDirectory;
 
-    @Override
-    public boolean correctArgs(Map<String, Object> args) {
-        return args.size() == 1 && Files.exists((Path) args.get("<directory>"));
-    }
-
-    @Override
-    public CommandResult doWork(Map<String, Object> args) throws GitException {
-        git = new GitAssembly((Path) args.get("<directory>"));
-        Message message = new Message();
-        if (!git.tree().exists()) {
-            try {
-                git.tree().createGitTree();
-                message.write("initialized empty ");
-                writeHead();
-            } catch (IOException e) {
-                String msg = "unable to create repository in " + git.tree().repo();
-                return new CommandResult(ExitStatus.FAILURE, msg);
-            }
-        } else {
-            message.write("reinitialized existing ");
+    private Path repositoryDirectory() {
+        if (repositoryDirectory == null) {
+            return Paths.get(System.getProperty("user.dir")).normalize().toAbsolutePath();
         }
-        message.write("Git repository in " + git.tree().repo());
-        return new CommandResult(ExitStatus.SUCCESS, message);
+        return repositoryDirectory;
     }
 
-    private void writeHead() throws GitException {
-        HeadInfo info = new HeadInfo();
-        info.branchName = "master";
-        GitClerk clerk = new GitClerk(git.tree());
-        clerk.changeHeadInfo(info);
+    @Override
+    public boolean gitNotInited(GitTree tree) {
+        return false;
     }
+
+    @Override
+    public CommandResult doWork(GitManager gitManager) throws GitException {
+        return new GitManager(repositoryDirectory()).init();
+    }
+
 }

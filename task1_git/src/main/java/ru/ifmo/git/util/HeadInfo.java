@@ -7,6 +7,7 @@ public class HeadInfo {
     public String currentHash;
 
     public HeadInfo() {
+        branchName = "master";
     }
 
     public void moveHead(String hash) {

@@ -1,63 +1,47 @@
 package ru.ifmo.git.commands;
 
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Command;
 import ru.ifmo.git.entities.*;
 import ru.ifmo.git.util.*;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
 
+@Command(
+        name = "checkout",
+        description = "Switch branches or restore working tree files",
+        helpCommand = true
+)
 public class Checkout implements GitCommand {
 
-    private Path commitFile;
-    private GitAssembly git;
+    @Parameters(
+            arity = "?",
+            paramLabel = "<revision>"
+    )
+    private String revision;
 
-    public Checkout() {
-        git = new GitAssembly(GitAssembly.cwd());
-    }
+    @Option(
+            names = {"--", "-r"},
+            arity = "*",
+            paramLabel = "<file>",
+            description = "Discard changes in working directory in the given files.",
+            type = Path.class
+    )
+    private List<Path> files;
 
-    public Checkout(Path cwd) {
-        git = new GitAssembly(cwd);
+    @Override
+    public boolean incorrectArgs() {
+        return (revision == null || revision.length() < 6) && (files.isEmpty());
     }
 
     @Override
-    public boolean correctArgs(Map<String, Object> args) throws GitException {
-        String commitHash = (String) args.get("<commit>");
-        if (commitHash.length() > 6) {
-            try {
-                Optional<Path> commit = git.fileKeeper().findFileInStorage(commitHash);
-                if (commit.isPresent()) {
-                    commitFile = commit.get();
-                    return true;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new GitException(e.getMessage());
-            }
+    public CommandResult doWork(GitManager gitManager) throws GitException {
+        if(revision != null) {
+            return gitManager.checkout(revision);
+        } else {
+            return gitManager.checkout(files);
         }
-        return false;
-    }
-
-    @Override
-    public CommandResult doWork(Map<String, Object> args) throws GitException {
-        if (!git.tree().exists()) {
-            return new CommandResult(ExitStatus.ERROR, "fatal: not a m_git repository");
-        }
-        try {
-            List<FileReference> references = git.crypto().formDecodeReferences(commitFile);
-            GitFileKeeper.clearDirectory(git.tree().repo());
-            git.fileKeeper().restoreCommit(references, git.tree().repo());
-            changeHeadInfo();
-        } catch (IOException e) {
-            throw new GitException(e.getMessage());
-        }
-        return new CommandResult(ExitStatus.SUCCESS, "checkout: done!");
-
-    }
-
-    private void changeHeadInfo() throws GitException {
-        HeadInfo headInfo = git.clerk().getHeadInfo();
-        headInfo.moveCurrent(commitFile.getParent().toFile().getName() + commitFile.toFile().getName());
-        git.clerk().changeHeadInfo(headInfo);
     }
 }

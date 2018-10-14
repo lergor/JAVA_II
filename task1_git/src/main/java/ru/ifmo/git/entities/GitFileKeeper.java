@@ -1,6 +1,7 @@
 package ru.ifmo.git.entities;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import ru.ifmo.git.util.*;
 
 import java.io.*;
@@ -38,9 +39,7 @@ public class GitFileKeeper {
     public void saveCommit(List<FileReference> references) throws IOException {
         for (FileReference reference : references) {
             Path file = filePath(reference.name);
-            if(Files.notExists(file)) {
-                Files.copy(reference.content, file, StandardCopyOption.REPLACE_EXISTING);
-            }
+            Files.copy(reference.content, file, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
@@ -91,7 +90,7 @@ public class GitFileKeeper {
         try {
             List<Path> files = Files.list(directory).collect(Collectors.toList());
             removeAll(files);
-        } catch (IOException e) {
+        } catch (IOException | GitException e) {
             throw new GitException("error while removing");
         }
     }
@@ -99,17 +98,27 @@ public class GitFileKeeper {
     static public void removeAll(List<Path> files) throws GitException {
         try {
             for (Path file : files) {
-                if (!Files.isHidden(file) && !Files.isExecutable(file)) {
-                    if (Files.isRegularFile(file)) {
-                        deleteFile(file);
-                    } else {
-                        clearDirectory(file);
-                        Files.deleteIfExists(file);
-                    }
+                if (Files.isRegularFile(file)) {
+                    deleteFile(file);
+                } else {
+                    clearDirectory(file);
+                    Files.deleteIfExists(file);
                 }
             }
         } catch (IOException e) {
             throw new GitException(e.getMessage());
         }
+    }
+
+    static public boolean checkFilesExist(List<Path> files, boolean verbose) {
+        for (Path file : files) {
+            if (!Files.exists(file)) {
+                if(verbose) {
+                    System.out.println("fatal: pathspec " + file.getFileName() + " did not match any files");
+                }
+                return false;
+            }
+        }
+        return true;
     }
 }

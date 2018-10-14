@@ -6,15 +6,11 @@ import java.nio.file.*;
 public class GitTree {
 
     private Path rootDir;
-    private Path gitDir;
+    private Path metaDir;
     private Path logDir;
     private Path storageDir;
     private Path indexDir;
     private Path headFile;
-
-    public GitTree() {
-        setRepository(GitAssembly.cwd());
-    }
 
     public GitTree(Path repository) {
         setRepository(repository);
@@ -22,19 +18,19 @@ public class GitTree {
 
     private void setRepository(Path repository) {
         rootDir = repository;
-        gitDir = rootDir.resolve(".m_git");
-        headFile = gitDir.resolve("HEAD");
-        logDir = gitDir.resolve("log");
-        storageDir = gitDir.resolve("storage");
-        indexDir = gitDir.resolve("index");
+        metaDir = rootDir.resolve(".l_git");
+        headFile = metaDir.resolve("HEAD");
+        logDir = metaDir.resolve("log");
+        storageDir = metaDir.resolve("storage");
+        indexDir = metaDir.resolve("index");
     }
 
     public void createGitTree() throws IOException {
-        gitDir = Files.createDirectory(rootDir.resolve(".m_git"));
-        headFile = Files.createFile(gitDir.resolve("HEAD"));
-        logDir = Files.createDirectory(gitDir.resolve("log"));
-        storageDir = Files.createDirectory(gitDir.resolve("storage"));
-        indexDir = Files.createDirectory(gitDir.resolve("index"));
+        metaDir = Files.createDirectory(rootDir.resolve(".l_git"));
+        headFile = Files.createFile(metaDir.resolve("HEAD"));
+        logDir = Files.createDirectory(metaDir.resolve("log"));
+        storageDir = Files.createDirectory(metaDir.resolve("storage"));
+        indexDir = Files.createDirectory(metaDir.resolve("index"));
     }
 
     public Path repo() {
@@ -58,10 +54,10 @@ public class GitTree {
     }
 
     public Path git() {
-        return gitDir;
+        return metaDir;
     }
     
     public boolean exists() {
-        return Files.exists(gitDir);
+        return Files.exists(metaDir);
     }
 }
