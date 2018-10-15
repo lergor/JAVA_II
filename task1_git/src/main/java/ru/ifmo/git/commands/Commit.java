@@ -3,8 +3,11 @@ package ru.ifmo.git.commands;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-import ru.ifmo.git.entities.*;
-import ru.ifmo.git.util.*;
+import java.io.IOException;
+
+import ru.ifmo.git.entities.GitManager;
+import ru.ifmo.git.util.CommandResult;
+import ru.ifmo.git.util.GitException;
 
 @Command(
         name = "commit",
@@ -22,7 +25,8 @@ public class Commit implements GitCommand {
     private String message;
 
     @Override
-    public CommandResult doWork(GitManager gitManager) throws GitException {
+    public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
         return gitManager.commit(message);
     }
+
 }

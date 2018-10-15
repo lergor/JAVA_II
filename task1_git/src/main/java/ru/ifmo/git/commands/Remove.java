@@ -2,11 +2,15 @@ package ru.ifmo.git.commands;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
-import ru.ifmo.git.entities.*;
-import ru.ifmo.git.util.*;
+
+import java.io.IOException;
 
 import java.nio.file.Path;
+
 import java.util.*;
+
+import ru.ifmo.git.entities.*;
+import ru.ifmo.git.util.*;
 
 @Command(
         name = "rm",
@@ -24,7 +28,8 @@ public class Remove implements GitCommand {
     }
 
     @Override
-    public CommandResult doWork(GitManager gitManager) {
+    public CommandResult doWork(GitManager gitManager) throws IOException {
         return gitManager.remove(files);
     }
+
 }

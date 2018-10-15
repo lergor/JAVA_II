@@ -9,19 +9,20 @@ This repository contains simple draft of **git**.
 The following commands are available:<br/>
 ```
 init
-add <file>
-rm <file>
+add <files>
+rm <files>
 status
 commit <message> <files>
-reset <to_commit>
-log [from_commit]
-checkout <commit>
+reset <to_revision>
+log [from_revision]
+checkout <revision>
+checkout -r <files>
 ```
 
 where *&lt;smth&gt;* means mandatory argument while *[smth]* 
 implies he optional one.<br/>
-*commit* is represented as short (at least 7 symbols) or entire hash code.
-
+*commit* is represented as short (at least 7 symbols) or entire hash code.<br/>
+*checkout -r <files>* is the replacement of *checkout -- <files>*.<br/>
 
 ### File hierarchy
 

@@ -2,6 +2,7 @@ package ru.ifmo.git.commands;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
+
 import ru.ifmo.git.entities.GitManager;
 import ru.ifmo.git.util.CommandResult;
 import ru.ifmo.git.util.GitException;
@@ -21,12 +22,8 @@ public class Log implements GitCommand {
     private String revision;
 
     @Override
-    public boolean incorrectArgs() {
-        return (revision == null || revision.length() < 6);
-    }
-
-    @Override
     public CommandResult doWork(GitManager gitManager) throws GitException {
         return gitManager.log(revision);
     }
+
 }

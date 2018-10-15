@@ -2,21 +2,27 @@ package ru.ifmo.git.entities;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import ru.ifmo.git.util.*;
+import ru.ifmo.git.util.BlobType;
+import ru.ifmo.git.util.FileReference;
 
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class GitFileKeeper {
 
-    private Path storage;
-    private GitTree gitTree;
+    private final Path storage;
     private static final int dirNameLen = 2;
 
-    public GitFileKeeper(GitTree gitTree) {
-        this.gitTree = gitTree;
+    GitFileKeeper(GitTree gitTree) {
         storage = gitTree.storage();
     }
 
@@ -28,7 +34,7 @@ public class GitFileKeeper {
         return getDir(blob).resolve(blob.substring(dirNameLen));
     }
 
-    private Path filePath(String blob) throws IOException {
+    private Path filePath(String blob) {
         Path directory = getDir(blob);
         if (Files.notExists(directory)) {
             boolean ignored = directory.toFile().mkdirs();
@@ -44,7 +50,8 @@ public class GitFileKeeper {
     }
 
     public Optional<Path> findFileInStorage(String hash) throws IOException {
-        List<Path> blobs = Files.list(getDir(hash)).collect(Collectors.toList());
+        List<Path> blobs;
+        blobs = Files.list(getDir(hash)).collect(Collectors.toList());
         for (Path blob : blobs) {
             if (blob.toFile().getName().startsWith(hash.substring(dirNameLen))) {
                 return Optional.of(blob);
@@ -57,6 +64,13 @@ public class GitFileKeeper {
         for (FileReference reference : references) {
             Path file = destination.resolve(reference.name);
             if (reference.type.equals(BlobType.FILE)) {
+                if(Files.notExists(file)) {
+                    Path dirs = file.getParent();
+                    if(!destination.equals(dirs)) {
+                        boolean ignored = dirs.toFile().mkdirs();
+                    }
+                    Files.createFile(file);
+                }
                 Files.copy(reference.content, file, StandardCopyOption.REPLACE_EXISTING);
             } else {
                 boolean ignored = file.toFile().mkdirs();
@@ -64,61 +78,42 @@ public class GitFileKeeper {
         }
     }
 
-    public static void deleteFile(Path file) throws GitException {
-        try {
-            Files.deleteIfExists(file);
-        } catch (IOException e) {
-            throw new GitException(e.getMessage());
-        }
-    }
-
-    static public void copyAll(List<Path> files, Path targetDir) throws IOException {
+    static public void copyAll(List<Path> files, Path source, Path targetDir) throws IOException {
         File destination = targetDir.toFile();
         if (destination.exists() || (!destination.exists() && destination.mkdirs())) {
-            for (Path f : files) {
-                File file = f.toFile();
-                if (file.isFile()) {
-                    FileUtils.copyFileToDirectory(file, destination);
-                } else if (file.isDirectory()) {
-                    FileUtils.copyDirectoryToDirectory(file, destination);
-                }
-            }
-        }
-    }
-
-    static public void clearDirectory(Path directory) throws GitException {
-        try {
-            List<Path> files = Files.list(directory).collect(Collectors.toList());
-            removeAll(files);
-        } catch (IOException | GitException e) {
-            throw new GitException("error while removing");
-        }
-    }
-
-    static public void removeAll(List<Path> files) throws GitException {
-        try {
             for (Path file : files) {
+                Path newFile = targetDir.resolve(source.relativize(file));
                 if (Files.isRegularFile(file)) {
-                    deleteFile(file);
-                } else {
-                    clearDirectory(file);
-                    Files.deleteIfExists(file);
+                    FileUtils.writeLines(newFile.toFile(), Files.readAllLines(file), System.lineSeparator());
+                } else if (Files.isDirectory(file)) {
+                    FileUtils.copyDirectoryToDirectory(file.toFile(), newFile.getParent().toFile());
                 }
             }
-        } catch (IOException e) {
-            throw new GitException(e.getMessage());
         }
     }
 
-    static public boolean checkFilesExist(List<Path> files, boolean verbose) {
+    static public void clearDirectory(Path directory) throws IOException {
+        List<Path> files = Files.list(directory).collect(Collectors.toList());
+        removeAll(files);
+    }
+
+    static public void removeAll(List<Path> files) throws IOException {
+        for (Path file : files) {
+            if (Files.isDirectory(file)) {
+                clearDirectory(file);
+            }
+            Files.deleteIfExists(file);
+        }
+    }
+
+    static public boolean checkFilesExist(List<Path> files) {
         for (Path file : files) {
             if (!Files.exists(file)) {
-                if(verbose) {
-                    System.out.println("fatal: pathspec " + file.getFileName() + " did not match any files");
-                }
+                System.out.println("fatal: pathspec " + file.getFileName() + " did not match any files");
                 return false;
             }
         }
         return true;
     }
+
 }

@@ -1,23 +1,25 @@
 package ru.ifmo.git.entities;
 
 import org.apache.commons.io.IOUtils;
+
 import ru.ifmo.git.util.BlobType;
 import ru.ifmo.git.util.FileReference;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class GitDecoder {
 
-    private static String ENCODING = "UTF-8";
-    private static int markLength = BlobType.size();
-    private static String sep = System.getProperty("line.separator");
-    private static String tab = "\t";
+    private static final String ENCODING = "UTF-8";
+    private static final int markLength = BlobType.size();
+    private static final String tab = "\t";
 
 
     private static BlobType readMarker(String infoString) {
@@ -28,22 +30,20 @@ public class GitDecoder {
         return string.substring(BlobType.size());
     }
 
-
-    public static List<FileReference> formCommitReferences(Path commitFile, GitFileKeeper storage) throws IOException {
+    static List<FileReference> formCommitReferences(Path commitFile, GitFileKeeper storage) throws IOException {
         return decodeTree(commitFile, storage);
     }
 
-    static private String withoutMarker(String infoString) {
+    private static String withoutMarker(String infoString) {
         return infoString.substring(markLength);
     }
 
     private static List<FileReference> decodeTree(Path treeFile, GitFileKeeper storage) throws IOException {
         List<FileReference> references = new ArrayList<>();
         FileReference decodedTree = decodeFile(treeFile);
-        references.add(decodedTree);
-        List<String> components = IOUtils.readLines(decodedTree.content, ENCODING);
-        for (String component : components) {
-            references.addAll(decodeComponent(component, storage));
+        List<?> components = IOUtils.readLines(decodedTree.content, ENCODING);
+        for (Object component : components) {
+            references.addAll(decodeComponent((String) component, storage));
         }
         return references;
     }
@@ -62,12 +62,13 @@ public class GitDecoder {
         BlobType type = readMarker(component);
         String[] HashAndName = removeMarker(component).split(tab);
         Path encodedFile = storage.correctPath(HashAndName[0]);
-        if(type.equals(BlobType.FILE)) {
+        if (type.equals(BlobType.FILE)) {
             return Collections.singletonList(decodeFile(encodedFile));
         }
-        if(type.equals(BlobType.TREE)) {
+        if (type.equals(BlobType.TREE)) {
             return decodeTree(encodedFile, storage);
         }
         return Collections.emptyList();
     }
+
 }

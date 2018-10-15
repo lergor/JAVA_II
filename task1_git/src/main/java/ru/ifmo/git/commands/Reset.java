@@ -3,6 +3,8 @@ package ru.ifmo.git.commands;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+import java.io.IOException;
+
 import ru.ifmo.git.entities.GitManager;
 import ru.ifmo.git.util.CommandResult;
 import ru.ifmo.git.util.GitException;
@@ -23,7 +25,8 @@ public class Reset implements GitCommand {
     }
 
     @Override
-    public CommandResult doWork(GitManager gitManager) throws GitException {
+    public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
         return gitManager.reset(revision);
     }
+
 }

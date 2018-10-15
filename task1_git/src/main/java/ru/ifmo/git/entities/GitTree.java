@@ -1,7 +1,9 @@
 package ru.ifmo.git.entities;
 
 import java.io.IOException;
-import java.nio.file.*;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class GitTree {
 
@@ -12,7 +14,7 @@ public class GitTree {
     private Path indexDir;
     private Path headFile;
 
-    public GitTree(Path repository) {
+    GitTree(Path repository) {
         setRepository(repository);
     }
 
@@ -25,7 +27,7 @@ public class GitTree {
         indexDir = metaDir.resolve("index");
     }
 
-    public void createGitTree() throws IOException {
+    void createGitTree() throws IOException {
         metaDir = Files.createDirectory(rootDir.resolve(".l_git"));
         headFile = Files.createFile(metaDir.resolve("HEAD"));
         logDir = Files.createDirectory(metaDir.resolve("log"));
@@ -33,31 +35,32 @@ public class GitTree {
         indexDir = Files.createDirectory(metaDir.resolve("index"));
     }
 
-    public Path repo() {
+    Path repo() {
         return rootDir;
     }
 
-    public Path index() {
+    Path index() {
         return indexDir;
     }
 
-    public Path log() {
+    Path log() {
         return logDir;
     }
 
-    public Path storage() {
+    Path storage() {
         return storageDir;
     }
 
-    public Path head() {
+    Path head() {
         return headFile;
     }
 
-    public Path git() {
+    Path git() {
         return metaDir;
     }
-    
+
     public boolean exists() {
         return Files.exists(metaDir);
     }
+
 }

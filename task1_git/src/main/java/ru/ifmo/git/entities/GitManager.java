@@ -1,13 +1,19 @@
 package ru.ifmo.git.entities;
 
 import picocli.CommandLine;
+
 import ru.ifmo.git.commands.GitCommand;
 import ru.ifmo.git.util.*;
 
 import java.io.IOException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -17,17 +23,12 @@ public class GitManager {
     private GitClerk clerk;
     private GitFileKeeper fileKeeper;
 
-    private static final String ENCODING = "UTF-8";
     private static final String sep = System.getProperty("line.separator");
 
     public GitManager(Path directory) {
         this.tree = new GitTree(directory);
         clerk = new GitClerk(tree);
         fileKeeper = new GitFileKeeper(tree);
-    }
-
-    public GitClerk clerk() {
-        return clerk;
     }
 
     public GitTree tree() {
@@ -37,10 +38,6 @@ public class GitManager {
     public CommandResult executeCommand(CommandLine commandLine) {
         GitCommand command = commandLine.getCommand();
         return command.execute(this);
-//        if(commandLine.getCommand() instanceof Init) {
-//            System.out.println("INIT");
-//            Init initCommand = (Init) commandLine.getCommand();
-//        }
     }
 
     public CommandResult init() throws GitException {
@@ -52,7 +49,7 @@ public class GitManager {
                 clerk.writeHeadInfo(new HeadInfo());
             } catch (IOException e) {
                 String msg = "unable to create repository in " + tree.repo();
-                return new CommandResult(ExitStatus.FAILURE, msg);
+                return new CommandResult(ExitStatus.FAILURE, msg, e);
             }
         } else {
             message.write("reinitialized existing ");
@@ -61,27 +58,18 @@ public class GitManager {
         return new CommandResult(ExitStatus.SUCCESS, message);
     }
 
-    public CommandResult add(List<Path> files) throws GitException {
-        try {
-            GitFileKeeper.copyAll(files, tree.index());
-        } catch (IOException e) {
-            throw new GitException(e.getMessage());
-        }
-        return new CommandResult(ExitStatus.SUCCESS, "l_git: add: done!");
+    public CommandResult add(List<Path> files) throws IOException {
+        GitFileKeeper.copyAll(files, tree.repo(), tree.index());
+        return new CommandResult(ExitStatus.SUCCESS, "add: done!");
     }
 
-    public CommandResult commit(String message) throws GitException {
-        CommitInfo commitInfo;
-        try {
-            commitInfo = clerk.fillCommitInfo(message);
-            List<FileReference> references = GitEncoder.formCommitReferences(commitInfo.hash, tree.index());
-            fileKeeper.saveCommit(references);
-            clerk.writeLog(commitInfo);
-            clerk.changeHeadInfo(commitInfo.hash);
-        } catch (IOException e) {
-            throw new GitException(e.getMessage());
-        }
-        return new CommandResult(ExitStatus.SUCCESS, "l_git: commit: done!");
+    public CommandResult commit(String message) throws GitException, IOException {
+        CommitInfo commitInfo = clerk.fillCommitInfo(message);
+        List<FileReference> references = GitEncoder.formCommitReferences(commitInfo.hash, tree.index());
+        fileKeeper.saveCommit(references);
+        clerk.writeLog(commitInfo);
+        clerk.changeHeadInfo(commitInfo.hash);
+        return new CommandResult(ExitStatus.SUCCESS, "commit: done!");
     }
 
     public CommandResult log(String revision) throws GitException {
@@ -104,8 +92,8 @@ public class GitManager {
                     }
                 }
         ).collect(Collectors.toList());
-        if(history.size() == 0) {
-            String failMessage = "l_git: log: '" + revision + "' unknown revision";
+        if (history.size() == 0) {
+            String failMessage = "log: '" + revision + "' unknown revision";
             return new CommandResult(ExitStatus.FAILURE, failMessage);
         }
         Message logContent = new Message();
@@ -113,57 +101,50 @@ public class GitManager {
         return new CommandResult(ExitStatus.SUCCESS, logContent);
     }
 
-    public CommandResult reset(String revision) throws GitException {
+    public CommandResult reset(String revision) throws GitException, IOException {
         if (clerk.getHeadInfo().currentHash.equals(revision)) {
-            return new CommandResult(ExitStatus.FAILURE, "reset: already on commit " + revision);
+            return new CommandResult(ExitStatus.FAILURE,
+                    "reset: already on commit " + revision);
         }
-        try{
-            Optional<Path> commit = fileKeeper.findFileInStorage(revision);
-            if (commit.isPresent()) {
-                Path commitFile = commit.get();
-                List<FileReference> references = GitDecoder.formCommitReferences(commitFile, fileKeeper);
-                GitFileKeeper.clearDirectory(tree.index());
-                fileKeeper.restoreCommit(references, tree.index());
-                clerk.changeHeadInfo(revision);
-                return new CommandResult(ExitStatus.SUCCESS, "reset: done!");
-            }
-        } catch (IOException e) {
-            throw  new GitException(e.getMessage());
+        Optional<Path> commit = fileKeeper.findFileInStorage(revision);
+        if (commit.isPresent()) {
+            Path commitFile = commit.get();
+            List<FileReference> references = GitDecoder.formCommitReferences(commitFile, fileKeeper);
+            GitFileKeeper.clearDirectory(tree.index());
+            fileKeeper.restoreCommit(references, tree.index());
+            clerk.changeHeadInfo(revision);
+            return new CommandResult(ExitStatus.SUCCESS, "reset: done!");
         }
-        String failMessage = "l_git: reset: '" + revision + "' unknown revision";
+        String failMessage = "reset: '" + revision + "' unknown revision";
         return new CommandResult(ExitStatus.FAILURE, failMessage);
     }
 
-    public CommandResult checkout(String revision) throws GitException {
+    public CommandResult checkout(String revision) throws GitException, IOException {
         if (clerk.getHeadInfo().currentHash.equals(revision)) {
-            return new CommandResult(ExitStatus.FAILURE, "reset: already on commit " + revision);
+            return new CommandResult(ExitStatus.FAILURE,
+                    "checkout: already on commit " + revision);
         }
-        try {
-            Optional<Path> commit = fileKeeper.findFileInStorage(revision);
-            if (commit.isPresent()) {
-                Path commitFile = commit.get();
-                List<FileReference> references = GitDecoder.formCommitReferences(commitFile, fileKeeper);
-                fileKeeper.restoreCommit(references, tree.repo());
-                clerk.changeHeadInfo(revision);
-            }
-        } catch (IOException e) {
-            throw new GitException(e.getMessage());
+        Optional<Path> commit = fileKeeper.findFileInStorage(revision);
+        if (commit.isPresent()) {
+            Path commitFile = commit.get();
+            List<FileReference> references = GitDecoder.formCommitReferences(commitFile, fileKeeper);
+            GitFileKeeper.clearDirectory(tree.index());
+            fileKeeper.restoreCommit(references, tree.index());
+            GitFileKeeper.copyAll(Files.list(tree.index()).collect(Collectors.toList()),
+                    tree.index(), tree.repo());
+            clerk.changeHeadInfo(revision);
         }
         return new CommandResult(ExitStatus.SUCCESS, "checkout: done!");
     }
 
-    public CommandResult checkout(List<Path> files) throws GitException {
+    public CommandResult checkout(List<Path> files) throws IOException {
         files = files.stream()
                 .map(f -> tree.index().resolve(tree.repo().relativize(f)))
                 .collect(Collectors.toList());
-        if(!GitFileKeeper.checkFilesExist(files, true)) {
+        if (!GitFileKeeper.checkFilesExist(files)) {
             return new CommandResult(ExitStatus.FAILURE, "");
         }
-        try{
-            GitFileKeeper.copyAll(files, tree.repo());
-        } catch (IOException e) {
-            throw new GitException(e.getMessage());
-        }
+        GitFileKeeper.copyAll(files, tree.index(), tree.repo());
         return new CommandResult(ExitStatus.SUCCESS, "checkout: done!");
     }
 
@@ -171,12 +152,12 @@ public class GitManager {
         return new CommandResult(ExitStatus.SUCCESS, "kek");
     }
 
-    public CommandResult status() throws GitException {
+    public CommandResult status() throws GitException, IOException {
         HeadInfo headInfo = clerk.getHeadInfo();
         Message info = new Message();
-        info.write("On branch " + headInfo.branchName + GitClerk.sep);
+        info.write("On branch " + headInfo.branchName + sep);
         Map<String, String> fileToStatus = clerk.compareRepoAndIndex();
-        if(fileToStatus.isEmpty()) {
+        if (fileToStatus.isEmpty()) {
             info.write("No changed files");
         } else {
             for (Map.Entry<String, String> e : fileToStatus.entrySet()) {
@@ -189,19 +170,15 @@ public class GitManager {
         return new CommandResult(ExitStatus.SUCCESS, info);
     }
 
-    public CommandResult remove(List<Path> files) {
-        try {
-            List<Path> filesInIndex = files.stream()
-                    .map(f -> tree.index().resolve(tree.repo().relativize(f)))
-                    .collect(Collectors.toList());
-            GitFileKeeper.removeAll(filesInIndex);
-            List<Path> filesInCWD = files.stream()
-                    .map(tree.repo()::resolve)
-                    .collect(Collectors.toList());
-            GitFileKeeper.removeAll(filesInCWD);
-        } catch (GitException e) {
-            return new CommandResult(ExitStatus.ERROR, "rm: " + e.getMessage());
-        }
+    public CommandResult remove(List<Path> files) throws IOException {
+        List<Path> filesInIndex = files.stream()
+                .map(f -> tree.index().resolve(tree.repo().relativize(f)))
+                .collect(Collectors.toList());
+        GitFileKeeper.removeAll(filesInIndex);
+//        List<Path> filesInCWD = files.stream()
+//                .map(tree.repo()::resolve)
+//                .collect(Collectors.toList());
+//        GitFileKeeper.removeAll(filesInCWD);
         return new CommandResult(ExitStatus.SUCCESS, "rm: done!");
     }
 

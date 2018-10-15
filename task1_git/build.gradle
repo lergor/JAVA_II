@@ -4,7 +4,7 @@ version '1.0-SNAPSHOT'
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = "ru.ifmo.git.Git"
+mainClassName = "ru.ifmo.git.LGit"
 
 sourceCompatibility = 1.8
 

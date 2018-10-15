@@ -3,11 +3,15 @@ package ru.ifmo.git.commands;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Command;
-import ru.ifmo.git.entities.*;
-import ru.ifmo.git.util.*;
+
+import java.io.IOException;
 
 import java.nio.file.Path;
+
 import java.util.List;
+
+import ru.ifmo.git.entities.*;
+import ru.ifmo.git.util.*;
 
 @Command(
         name = "checkout",
@@ -16,14 +20,11 @@ import java.util.List;
 )
 public class Checkout implements GitCommand {
 
-    @Parameters(
-            arity = "?",
-            paramLabel = "<revision>"
-    )
+    @Parameters(arity = "?", paramLabel = "<revision>")
     private String revision;
 
     @Option(
-            names = {"--", "-r"},
+            names = {"-r"},
             arity = "*",
             paramLabel = "<file>",
             description = "Discard changes in working directory in the given files.",
@@ -37,11 +38,12 @@ public class Checkout implements GitCommand {
     }
 
     @Override
-    public CommandResult doWork(GitManager gitManager) throws GitException {
-        if(revision != null) {
+    public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
+        if (revision != null) {
             return gitManager.checkout(revision);
         } else {
             return gitManager.checkout(files);
         }
     }
+
 }
