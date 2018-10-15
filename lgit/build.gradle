@@ -20,4 +20,3 @@ dependencies {
     compile group: 'commons-codec', name: 'commons-codec', version: '1.11'
     compile group: 'info.picocli', name: 'picocli', version: '3.6.0'
 }
-

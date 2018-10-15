@@ -21,7 +21,7 @@ public class LGit {
         CommandLine commandLine = new CommandLine(new Git());
         try {
             List<CommandLine> parsed = commandLine.parse(args);
-            
+
             if (parsed.size() == 2) {
                 CommandLine command = parsed.get(1);
                 GitManager manager = new GitManager(cwd());
