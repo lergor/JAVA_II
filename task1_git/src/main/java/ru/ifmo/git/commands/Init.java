@@ -1,6 +1,7 @@
 package ru.ifmo.git.commands;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.nio.file.Path;
@@ -16,6 +17,13 @@ import ru.ifmo.git.util.*;
         helpCommand = true
 )
 public class Init implements GitCommand {
+
+    @Option(
+            names = {"-h", "--help"},
+            usageHelp = true,
+            description = "Display more info about command init."
+    )
+    boolean usageHelpRequested;
 
     @Parameters(arity = "?", paramLabel = "directory")
     private Path repositoryDirectory;

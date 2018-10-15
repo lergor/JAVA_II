@@ -1,6 +1,7 @@
 package ru.ifmo.git.commands;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
@@ -18,6 +19,13 @@ import ru.ifmo.git.util.*;
         helpCommand = true
 )
 public class Remove implements GitCommand {
+
+    @Option(
+            names = {"-h", "--help"},
+            usageHelp = true,
+            description = "Display more info about command rm."
+    )
+    boolean usageHelpRequested;
 
     @Parameters(arity = "*", paramLabel = "<pathspec>")
     private List<Path> files;

@@ -1,6 +1,7 @@
 package ru.ifmo.git.commands;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.IOException;
@@ -19,6 +20,13 @@ import ru.ifmo.git.util.CommandResult;
         helpCommand = true
 )
 public class Add implements GitCommand {
+
+    @Option(
+            names = {"-h", "--help"},
+            usageHelp = true,
+            description = "Display more info about command add."
+    )
+    boolean usageHelpRequested;
 
     @Parameters(arity = "*", paramLabel = "<pathspec>")
     private List<Path> files;

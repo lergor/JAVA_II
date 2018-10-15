@@ -20,6 +20,13 @@ import ru.ifmo.git.util.*;
 )
 public class Checkout implements GitCommand {
 
+    @Option(
+            names = {"-h", "--help"},
+            usageHelp = true,
+            description = "Display more info about command checkout."
+    )
+    boolean usageHelpRequested;
+
     @Parameters(arity = "?", paramLabel = "<revision>")
     private String revision;
 

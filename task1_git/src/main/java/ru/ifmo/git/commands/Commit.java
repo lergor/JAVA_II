@@ -17,6 +17,13 @@ import ru.ifmo.git.util.GitException;
 public class Commit implements GitCommand {
 
     @Option(
+            names = {"-h", "--help"},
+            usageHelp = true,
+            description = "Display more info about command commit."
+    )
+    boolean usageHelpRequested;
+
+    @Option(
             names = {"-m", "--message"},
             arity = "?",
             paramLabel = "<msg>",

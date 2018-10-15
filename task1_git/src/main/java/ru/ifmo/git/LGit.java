@@ -14,20 +14,22 @@ import ru.ifmo.git.util.CommandResult;
 public class LGit {
 
     private static Path cwd() {
-//        return Paths.get(System.getProperty("user.dir"));
-        return Paths.get("/home/valeriya/Desktop/AU/III/JAVA_II/task1_git/kek");
+        return Paths.get(System.getProperty("user.dir"));
     }
 
     public static void main(String[] args) {
         CommandLine commandLine = new CommandLine(new Git());
         try {
             List<CommandLine> parsed = commandLine.parse(args);
-
-            // TODO git help
-
+            
             if (parsed.size() == 2) {
+                CommandLine command = parsed.get(1);
                 GitManager manager = new GitManager(cwd());
-                CommandResult result = manager.executeCommand(parsed.get(1));
+                if (command.isUsageHelpRequested()) {
+                    command.usage(System.out);
+                    return;
+                }
+                CommandResult result = manager.executeCommand(command);
                 result.print();
             } else {
                 commandLine.usage(System.out);

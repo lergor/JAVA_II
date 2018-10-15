@@ -1,6 +1,7 @@
 package ru.ifmo.git.commands;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 import java.io.IOException;
 
@@ -14,6 +15,13 @@ import ru.ifmo.git.util.GitException;
         helpCommand = true
 )
 public class Status implements GitCommand {
+
+    @Option(
+            names = {"-h", "--help"},
+            usageHelp = true,
+            description = "Display more info about command checkout."
+    )
+    boolean usageHelpRequested;
 
     @Override
     public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
