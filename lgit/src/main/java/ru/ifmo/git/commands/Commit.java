@@ -19,7 +19,7 @@ public class Commit implements GitCommand {
     @Option(
             names = {"-h", "--help"},
             usageHelp = true,
-            description = "Display more info about command commit."
+            description = "Display more info about command 'commit'"
     )
     boolean usageHelpRequested;
 
@@ -27,7 +27,7 @@ public class Commit implements GitCommand {
             names = {"-m", "--message"},
             arity = "?",
             paramLabel = "<msg>",
-            description = "Use the given <msg> as the commit message."
+            description = "Use the given <msg> as the commit message"
     )
     private String message;
 

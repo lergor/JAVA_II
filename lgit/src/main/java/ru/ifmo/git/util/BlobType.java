@@ -2,13 +2,14 @@ package ru.ifmo.git.util;
 
 public enum BlobType {
 
-    FILE, TREE, COMMIT;
+    FILE, TREE, COMMIT, PARENT_BRANCH;
 
     static public BlobType typeOf(String mark) {
         return
                 mark.equals("cm\\") ? COMMIT :
                         mark.equals("tr\\") ? TREE :
-                                FILE;
+                                mark.equals("fl\\") ? FILE :
+                                PARENT_BRANCH;
     }
 
     public String asString() {
@@ -19,6 +20,8 @@ public enum BlobType {
                 return "tr\\";
             case COMMIT:
                 return "cm\\";
+            case PARENT_BRANCH:
+                return "pb\\";
         }
         return "";
     }

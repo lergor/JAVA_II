@@ -7,6 +7,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import ru.ifmo.git.util.BlobType;
 import ru.ifmo.git.util.CommitInfo;
 import ru.ifmo.git.util.GitException;
 import ru.ifmo.git.util.HeadInfo;
@@ -81,7 +83,7 @@ public class GitClerk {
         }
     }
 
-    private static void writeToFile(Path file, String content, boolean append) throws GitException {
+    static void writeToFile(Path file, String content, boolean append) throws GitException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile(), append))) {
             writer.write(content);
         } catch (IOException e) {
@@ -89,8 +91,7 @@ public class GitClerk {
         }
     }
 
-    public List<CommitInfo> getLogHistory() throws GitException {
-        String branch = getHeadInfo().branchName;
+    public List<CommitInfo> getLogHistory(String branch) throws GitException {
         File logFile = gitTree.log().resolve(branch).toFile();
         List<CommitInfo> history = new ArrayList<>();
         if(!logFile.exists()) {
@@ -98,13 +99,20 @@ public class GitClerk {
         }
         try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
             for (String line; (line = br.readLine()) != null; ) {
-                history.add(gson.fromJson(line, CommitInfo.class));
+                if(line.startsWith(BlobType.PARENT_BRANCH.asString())) {
+                    history.addAll(getLogHistory(line.substring(BlobType.size())));
+                } else {
+                    history.add(gson.fromJson(line, CommitInfo.class));
+                }
             }
         } catch (IOException e) {
             throw new GitException("error while reading log for " + branch);
         }
-        Collections.reverse(history);
         return history;
+    }
+
+    public List<CommitInfo> getLogHistory() throws GitException {
+        return getLogHistory(getHeadInfo().branchName);
     }
 
     private static String getAuthor() {
@@ -179,4 +187,45 @@ public class GitClerk {
         return fileNames;
     }
 
+    String getHead(String branch) throws GitException {
+        List<CommitInfo> history = getLogHistory(branch);
+        if(history.size() == 0) {
+            return "";
+        }
+        return history.get(history.size() - 1).hash;
+    }
+
+    public Map<String, String> collectEncodedFiles(Path encodedTree, GitFileKeeper storage) throws IOException {
+        Map<String, String> hashToName = new HashMap<>();
+        List<String> lines = Files.readAllLines(encodedTree, Charset.forName(ENCODING));
+        lines.remove(0);
+        for (String line: lines) {
+            BlobType type = GitDecoder.readMarker(line);
+            String[] hashAndName = line.substring(BlobType.size()).split("\t");
+            if(type == BlobType.FILE) {
+                hashToName.put(hashAndName[1], hashAndName[0]);
+            } else {
+                hashToName.putAll(collectEncodedFiles(storage.correctPath(hashAndName[0]), storage));
+            }
+        }
+        return hashToName;
+    }
+
+    public List<CommitInfo> getBranchCommits(String branch) throws GitException {
+        File logFile = gitTree.log().resolve(branch).toFile();
+        List<CommitInfo> branchHistory = new ArrayList<>();
+        if(!logFile.exists()) {
+            return branchHistory;
+        }
+        try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
+            for (String line; (line = br.readLine()) != null; ) {
+                if(!line.startsWith(BlobType.PARENT_BRANCH.asString())) {
+                    branchHistory.add(gson.fromJson(line, CommitInfo.class));
+                }
+            }
+        } catch (IOException e) {
+            throw new GitException("error while reading log for " + branch);
+        }
+        return branchHistory;
+    }
 }

@@ -22,4 +22,8 @@ public class HeadInfo {
         moveHead(hash);
         moveCurrent(hash);
     }
+
+    public void setBranchName(String branchName) {
+        this.branchName = branchName;
+    }
 }

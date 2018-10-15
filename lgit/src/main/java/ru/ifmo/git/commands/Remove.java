@@ -23,7 +23,7 @@ public class Remove implements GitCommand {
     @Option(
             names = {"-h", "--help"},
             usageHelp = true,
-            description = "Display more info about command rm."
+            description = "Display more info about command 'rm'"
     )
     boolean usageHelpRequested;
 

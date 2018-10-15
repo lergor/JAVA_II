@@ -20,7 +20,7 @@ public class Reset implements GitCommand {
     @Option(
             names = {"-h", "--help"},
             usageHelp = true,
-            description = "Display more info about command reset."
+            description = "Display more info about command 'reset'"
     )
     boolean usageHelpRequested;
 

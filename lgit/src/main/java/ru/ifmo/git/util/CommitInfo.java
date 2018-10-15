@@ -50,10 +50,11 @@ public class CommitInfo {
     }
 
     public String toString() {
-        return "commit " + hash + "\n" +
-                "Author:\t" + author + "\n" +
-                "Date:\t" + time + "\n" +
-                "\t\t" + message + "\n\n";
+        String sep = System.lineSeparator();
+        return "commit " + hash + "\t" + "(" + branch + ")" + sep +
+                "Author:\t" + author + sep +
+                "Date:\t" + time + sep +
+                "\t\t" + message + sep + sep;
     }
 
 }

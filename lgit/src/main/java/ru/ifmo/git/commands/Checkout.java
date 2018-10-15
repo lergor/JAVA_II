@@ -23,7 +23,7 @@ public class Checkout implements GitCommand {
     @Option(
             names = {"-h", "--help"},
             usageHelp = true,
-            description = "Display more info about command checkout."
+            description = "Display more info about command 'checkout'"
     )
     boolean usageHelpRequested;
 
@@ -34,22 +34,34 @@ public class Checkout implements GitCommand {
             names = {"-r"},
             arity = "*",
             paramLabel = "<file>",
-            description = "Discard changes in working directory in the given files.",
+            description = "Discard changes in working directory in the given files",
             type = Path.class
     )
     private List<Path> files;
 
+    @Option(
+            names = {"-b"},
+            arity = "1",
+            paramLabel = "<new_branch>",
+            description = "Create a new branch named <new_branch> and checkout to it",
+            type = String.class
+    )
+    private String branchName;
+
     @Override
     public boolean incorrectArgs() {
-        return (revision == null || revision.length() < 6) && (files.isEmpty());
+        return (revision == null || revision.length() < 6) &&
+                (files == null) && (branchName == null);
     }
 
     @Override
     public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
         if (revision != null) {
             return gitManager.checkout(revision);
-        } else {
+        } else if (files != null) {
             return gitManager.checkout(files);
+        } else {
+            return gitManager.checkoutNewBranch(branchName);
         }
     }
 

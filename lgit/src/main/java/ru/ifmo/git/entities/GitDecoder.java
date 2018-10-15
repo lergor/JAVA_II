@@ -22,11 +22,11 @@ public class GitDecoder {
     private static final String tab = "\t";
 
 
-    private static BlobType readMarker(String infoString) {
+    static BlobType readMarker(String infoString) {
         return BlobType.typeOf(infoString.substring(0, BlobType.size()));
     }
 
-    private static String removeMarker(String string) {
+    static String removeMarker(String string) {
         return string.substring(BlobType.size());
     }
 

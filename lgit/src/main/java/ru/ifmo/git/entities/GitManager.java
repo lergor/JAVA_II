@@ -4,13 +4,16 @@ import picocli.CommandLine;
 
 import ru.ifmo.git.commands.GitCommand;
 import ru.ifmo.git.util.*;
+import sun.misc.IOUtils;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -78,6 +81,7 @@ public class GitManager {
             return emptyLog;
         }
         List<CommitInfo> history = clerk.getLogHistory();
+        Collections.reverse(history);
         if (history.size() == 0) {
             return emptyLog;
         }
@@ -87,7 +91,7 @@ public class GitManager {
 
                     @Override
                     public boolean test(CommitInfo commitInfo) {
-                        include = include || commitInfo.hash.startsWith(revision);
+                        include = include || !commitInfo.hash.startsWith(revision);
                         return include;
                     }
                 }
@@ -120,6 +124,9 @@ public class GitManager {
     }
 
     public CommandResult checkout(String revision) throws GitException, IOException {
+        if(Files.exists(tree.log().resolve(revision))) {
+            return checkoutBranch(revision);
+        }
         if (clerk.getHeadInfo().currentHash.equals(revision)) {
             return new CommandResult(ExitStatus.FAILURE,
                     "checkout: already on commit " + revision);
@@ -146,10 +153,6 @@ public class GitManager {
         }
         GitFileKeeper.copyAll(files, tree.index(), tree.repo());
         return new CommandResult(ExitStatus.SUCCESS, "checkout: done!");
-    }
-
-    public CommandResult checkoutBranch(String branch) throws GitException {
-        return new CommandResult(ExitStatus.SUCCESS, "kek");
     }
 
     public CommandResult status() throws GitException, IOException {
@@ -182,4 +185,73 @@ public class GitManager {
         return new CommandResult(ExitStatus.SUCCESS, "rm: done!");
     }
 
+    public CommandResult checkoutNewBranch(String branch) throws GitException, IOException {
+        newBranch(branch);
+        checkoutBranch(branch);
+        return new CommandResult(ExitStatus.SUCCESS, "On branch " + branch);
+    }
+
+    private CommandResult checkoutBranch(String branch) throws GitException, IOException {
+        HeadInfo headInfo = clerk.getHeadInfo();
+        if(headInfo.branchName.equals(branch)) {
+            return new CommandResult(ExitStatus.FAILURE,
+                    "Already on branch '" + branch + "'");
+        }
+
+        String head = clerk.getHead(branch);
+        if(head.isEmpty()) {
+            headInfo = new HeadInfo();
+        }
+        headInfo.setBranchName(branch);
+        clerk.writeHeadInfo(headInfo);
+
+        if(!head.isEmpty()) {
+            CommandResult res = checkout(head);
+            if(res.getStatus() != ExitStatus.SUCCESS) {
+                return res;
+            }
+            headInfo.moveBoth(head);
+        }
+        clerk.writeHeadInfo(headInfo);
+        return new CommandResult(ExitStatus.SUCCESS, "On branch " + branch);
+    }
+
+    public CommandResult newBranch(String branch) throws GitException, IOException {
+        Path logFile = tree.log().resolve(branch);
+        if(Files.exists(logFile)) {
+            return new CommandResult(ExitStatus.FAILURE,
+                    "branch with name '" + branch + "' already exists");
+        }
+        Files.createFile(logFile);
+        String parentBranch = BlobType.PARENT_BRANCH.asString() + clerk.getHeadInfo().branchName + sep;
+        GitClerk.writeToFile(logFile, parentBranch, false);
+        return new CommandResult(ExitStatus.SUCCESS, "On branch " + branch);
+    }
+
+    public CommandResult deleteBranch(String branch) throws GitException, IOException {
+        Path branchFile = tree.log().resolve(branch);
+        if(Files.notExists(branchFile)) {
+            return new CommandResult(ExitStatus.FAILURE,
+                    "branch with name '" + branch + "' does not exist");
+        }
+        if(clerk.getHeadInfo().branchName.equals(branch)) {
+            return new CommandResult(ExitStatus.ERROR,
+                    "cannot delete the current branch '" + branch + "'");
+        }
+        String head = clerk.getHead(branch);
+        if(!head.isEmpty()) {
+            fileKeeper.deleteCommit(head, clerk);
+            for (CommitInfo c: clerk.getBranchCommits(branch)) {
+                fileKeeper.deleteCommit(c.hash, clerk);
+            }
+        }
+        Files.delete(branchFile);
+        return new CommandResult(ExitStatus.SUCCESS, "Branch '" + branch + "' deleted");
+    }
+
+    public CommandResult listBranches() throws IOException {
+        Message message = new Message();
+        Files.list(tree.log()).forEach(b -> message.write(b.getFileName().toString() + sep));
+        return new CommandResult(ExitStatus.SUCCESS, message);
+    }
 }

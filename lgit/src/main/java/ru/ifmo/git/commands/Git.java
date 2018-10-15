@@ -12,16 +12,17 @@ import picocli.CommandLine;
             Commit.class,
             Reset.class,
             Log.class,
-            Checkout.class
+            Checkout.class,
+            Branch.class
         },
-        description = "A version control system created by lergor."
+        description = "A version control system created by lergor"
 )
 public class Git {
 
     @CommandLine.Option(
             names = {"-h", "--help"},
             help = true,
-            description = "Prints the synopsis and a list of the most commonly used commands."
+            description = "Prints the synopsis and a list of the most commonly used commands"
     )
     boolean isHelpRequested;
 

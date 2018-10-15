@@ -42,7 +42,7 @@ implies he optional one.<br/>
 In order to run this app, follow this steps:
 
 * clone this repository 
-* checkout on branch *git_milestone_2*
+* checkout on branch *git_milestone_3*
 * run `./gradlew installDist`
 * go to the `./build/install/l_git/bin/`
 * execute `l_git` (or `l_git.bat` on Windows)

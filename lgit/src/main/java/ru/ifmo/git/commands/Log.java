@@ -18,14 +18,14 @@ public class Log implements GitCommand {
     @Option(
             names = {"-h", "--help"},
             usageHelp = true,
-            description = "Display more info about command log."
+            description = "Display more info about command 'log'"
     )
     boolean usageHelpRequested;
 
     @Parameters(
             arity = "?",
             paramLabel = "<revision>",
-            description = "Show only commits since specified <revision>."
+            description = "Show only commits since specified <revision>"
     )
     private String revision;
 

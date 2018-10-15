@@ -35,7 +35,7 @@ public class LGit {
                 commandLine.usage(System.out);
             }
         } catch (CommandLine.UnmatchedArgumentException e) {
-            System.out.println("l_git: no such command. See 'l_git --help'.");
+            System.out.println("l_git: no such command. See 'l_git --help'");
         }
     }
 

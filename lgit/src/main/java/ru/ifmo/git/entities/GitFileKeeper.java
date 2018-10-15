@@ -3,6 +3,7 @@ package ru.ifmo.git.entities;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import ru.ifmo.git.util.BlobType;
+import ru.ifmo.git.util.CommitInfo;
 import ru.ifmo.git.util.FileReference;
 
 import java.io.File;
@@ -14,6 +15,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -114,6 +116,17 @@ public class GitFileKeeper {
             }
         }
         return true;
+    }
+
+    public void deleteCommit(String hash, GitClerk clerk) throws IOException {
+        Optional<Path> commit = findFileInStorage(hash);
+        if (commit.isPresent()) {
+            Path commitFile = commit.get();
+            Map<String, String> hashToName = clerk.collectEncodedFiles(commitFile, this);
+            for (Map.Entry<String, String> e: hashToName.entrySet()) {
+                Files.deleteIfExists(correctPath(e.getKey()));
+            }
+        }
     }
 
 }

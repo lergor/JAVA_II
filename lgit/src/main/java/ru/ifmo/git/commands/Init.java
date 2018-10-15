@@ -21,7 +21,7 @@ public class Init implements GitCommand {
     @Option(
             names = {"-h", "--help"},
             usageHelp = true,
-            description = "Display more info about command init."
+            description = "Display more info about command 'init'"
     )
     boolean usageHelpRequested;
 

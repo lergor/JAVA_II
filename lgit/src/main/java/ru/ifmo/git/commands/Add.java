@@ -24,7 +24,7 @@ public class Add implements GitCommand {
     @Option(
             names = {"-h", "--help"},
             usageHelp = true,
-            description = "Display more info about command add."
+            description = "Display more info about command 'add'"
     )
     boolean usageHelpRequested;
 
