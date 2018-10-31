@@ -10,9 +10,10 @@ import java.nio.file.Path;
 
 import java.util.List;
 
-import ru.ifmo.git.entities.GitFileKeeper;
+import ru.ifmo.git.entities.GitFileManager;
 import ru.ifmo.git.entities.GitManager;
 import ru.ifmo.git.util.CommandResult;
+import ru.ifmo.git.util.GitException;
 
 @Command(
         name = "add",
@@ -33,11 +34,11 @@ public class Add implements GitCommand {
 
     @Override
     public boolean incorrectArgs() {
-        return !GitFileKeeper.checkFilesExist(files);
+        return !GitFileManager.checkFilesExist(files);
     }
 
     @Override
-    public CommandResult doWork(GitManager gitManager) throws IOException {
+    public CommandResult doWork(GitManager gitManager) throws IOException, GitException {
         return gitManager.add(files);
     }
 

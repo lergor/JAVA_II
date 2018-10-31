@@ -1,5 +1,7 @@
 package ru.ifmo.git.commands;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -23,9 +25,12 @@ public class Status implements GitCommand {
     )
     boolean usageHelpRequested;
 
+    @Parameters(arity = "1", paramLabel = "<revision>")
+    private String revision;
+
     @Override
     public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
-        return gitManager.status();
+        return gitManager.status(revision);
     }
 
 }

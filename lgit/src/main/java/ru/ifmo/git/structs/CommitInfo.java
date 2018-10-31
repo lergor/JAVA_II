@@ -1,4 +1,4 @@
-package ru.ifmo.git.util;
+package ru.ifmo.git.structs;
 
 import java.nio.file.Path;
 import java.text.DateFormat;
@@ -46,7 +46,7 @@ public class CommitInfo {
     }
 
     public void setRootDirectory(Path rootPath) {
-        this.rootDirectory = rootPath.toAbsolutePath().toString();
+        this.rootDirectory = rootPath.toString();
     }
 
     public String toString() {

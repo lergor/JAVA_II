@@ -13,7 +13,8 @@ import picocli.CommandLine;
             Reset.class,
             Log.class,
             Checkout.class,
-            Branch.class
+            Branch.class,
+            Merge.class
         },
         description = "A version control system created by lergor"
 )

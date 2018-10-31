@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import ru.ifmo.git.entities.GitManager;
-import ru.ifmo.git.entities.GitTree;
+import ru.ifmo.git.entities.GitStructure;
 import ru.ifmo.git.util.*;
 
 @Command(
@@ -36,7 +36,7 @@ public class Init implements GitCommand {
     }
 
     @Override
-    public boolean gitNotInited(GitTree tree) {
+    public boolean gitNotInited(GitStructure tree) {
         return false;
     }
 

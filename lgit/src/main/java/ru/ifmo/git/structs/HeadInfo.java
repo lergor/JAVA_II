@@ -1,10 +1,10 @@
-package ru.ifmo.git.util;
+package ru.ifmo.git.structs;
 
 public class HeadInfo {
 
-    public String branchName;
-    public String headHash;
-    public String currentHash;
+    public String branchName = "";
+    public String headHash = "";
+    public String currentHash = "";
 
     public HeadInfo() {
         branchName = "master";
@@ -23,7 +23,19 @@ public class HeadInfo {
         moveCurrent(hash);
     }
 
+    public String currentHash() {
+        return currentHash;
+    }
+
+    public String headHash() {
+        return headHash;
+    }
+
     public void setBranchName(String branchName) {
         this.branchName = branchName;
+    }
+
+    public String branch() {
+        return branchName;
     }
 }

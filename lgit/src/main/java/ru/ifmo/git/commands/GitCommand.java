@@ -3,7 +3,7 @@ package ru.ifmo.git.commands;
 import java.io.IOException;
 
 import ru.ifmo.git.entities.GitManager;
-import ru.ifmo.git.entities.GitTree;
+import ru.ifmo.git.entities.GitStructure;
 import ru.ifmo.git.util.*;
 
 public interface GitCommand {
@@ -12,7 +12,7 @@ public interface GitCommand {
         return false;
     }
 
-    default boolean gitNotInited(GitTree tree) {
+    default boolean gitNotInited(GitStructure tree) {
         return !tree.exists();
     }
 
@@ -20,7 +20,7 @@ public interface GitCommand {
 
     default CommandResult execute(GitManager gitManager) {
         String name = this.getClass().getSimpleName().toLowerCase();
-        if (gitNotInited(gitManager.tree())) {
+        if (gitNotInited(gitManager.structure())) {
             return new CommandResult(ExitStatus.ERROR, "fatal: Not a l_git repository");
         }
         if (incorrectArgs()) {

@@ -27,7 +27,12 @@ public class Checkout implements GitCommand {
     )
     boolean usageHelpRequested;
 
-    @Parameters(arity = "?", paramLabel = "<revision>")
+    @Parameters(
+            arity = "?",
+            paramLabel = "<revision>/<branch>",
+            description = "Switch to revision or branch by updating the index and " +
+                    "the files in the working tree, and by pointing HEAD at the branch"
+    )
     private String revision;
 
     @Option(

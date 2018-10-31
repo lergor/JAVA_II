@@ -35,4 +35,7 @@ public class Message {
         System.out.print(read());
     }
 
+    public static String initializedMessage = "";
+    public static String reitializedMessage = "";
+
 }

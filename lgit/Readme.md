@@ -11,12 +11,19 @@ The following commands are available:<br/>
 init
 add <files>
 rm <files>
-status
 commit <message> <files>
 reset <to_revision>
 log [from_revision]
+status [to_revision]
 checkout <revision>
 checkout -r <files>
+checkout -b <new_branch>
+checkout <branch_name>
+branch -n <new_branch>
+branch -d <branch_name>
+merge <revision>
+merge <branch_name>
+
 ```
 
 where *&lt;smth&gt;* means mandatory argument while *[smth]* 
@@ -30,6 +37,7 @@ implies he optional one.<br/>
         logs/
             [log_file_for_branch]
         storage/
+            usages - file with usages of encoded files
             [dir_as_hashcode]
                 [file]
         index/
