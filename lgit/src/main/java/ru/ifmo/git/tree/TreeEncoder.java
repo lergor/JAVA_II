@@ -2,22 +2,24 @@ package ru.ifmo.git.tree;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
-import ru.ifmo.git.entities.GitFileManager;
-import ru.ifmo.git.util.BlobType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.SequenceInputStream;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ru.ifmo.git.entities.GitFileManager;
+import ru.ifmo.git.util.BlobType;
+
 public class TreeEncoder {
 
     private static final String ENCODING = "UTF-8";
-    private static final String sep = System.lineSeparator();
     private static final int markerLength = BlobType.size();
     private static final String tab = "\t";
 
@@ -86,8 +88,9 @@ public class TreeEncoder {
         tree.setType(readMarker(infoLine));
         tree.setHash(HashAndName[0]);
         tree.setPath(HashAndName.length > 1 ? HashAndName[1] : "");
-        tree.setContent(IOUtils.toInputStream(IOUtils.toString(reader)));
+        tree.setContent(IOUtils.toString(reader));
 
+        reader.close();
         return tree;
     }
 
@@ -99,7 +102,7 @@ public class TreeEncoder {
         tree.setHash(decoded.hash());
         tree.setPath(decoded.path());
 
-        List<?> components = IOUtils.readLines(decoded.content(), ENCODING);
+        List<String> components = decoded.contentAsLines();
         tree.setChildren(decodeComponents(components));
         return tree;
     }

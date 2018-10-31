@@ -5,7 +5,6 @@ import ru.ifmo.git.tree.Tree;
 import java.io.IOException;
 import java.util.*;
 
-
 public class StatusInfo {
 
     private Status indexToHead; // tracked

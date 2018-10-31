@@ -1,7 +1,6 @@
 package ru.ifmo.git.tree.visitors;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import ru.ifmo.git.tree.*;
 import ru.ifmo.git.util.BlobType;
 
@@ -14,7 +13,7 @@ public class SaverVisitor implements TreeVisitor {
     private void copyContent(TreeFile file, Path newFile) throws IOException {
         FileUtils.writeLines(
                 newFile.toFile(),
-                IOUtils.readLines(file.content()),
+                file.contentAsLines(),
                 System.lineSeparator()
         );
     }

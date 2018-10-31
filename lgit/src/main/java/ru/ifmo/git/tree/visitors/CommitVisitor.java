@@ -6,7 +6,7 @@ import ru.ifmo.git.tree.Tree;
 import ru.ifmo.git.tree.TreeDirectory;
 import ru.ifmo.git.tree.TreeFile;
 import ru.ifmo.git.tree.TreeVisitor;
-import ru.ifmo.git.util.FileReference;
+import ru.ifmo.git.structs.FileReference;
 import ru.ifmo.git.structs.Usages;
 
 import java.io.IOException;
@@ -33,11 +33,12 @@ public class CommitVisitor implements TreeVisitor {
                 }
                 Files.createFile(file);
             }
-            Files.copy(r.content, file, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(IOUtils.toInputStream(r.content.toString()),
+                    file, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
-    private InputStream formCommitContent(Tree tree) {
+    private String formCommitContent(Tree tree) {
         if (tree instanceof TreeFile) {
             return ((TreeFile) tree).content();
         }
@@ -45,17 +46,16 @@ public class CommitVisitor implements TreeVisitor {
         for (Tree child : ((TreeDirectory) tree).children()) {
             builder.append(child.info());
         }
-        return IOUtils.toInputStream(builder.toString());
+        return builder.toString();
     }
 
     private FileReference formReference(Tree tree) {
         FileReference reference = new FileReference();
         reference.type = tree.type();
         reference.name = tree.hash();
-        reference.content = new SequenceInputStream(
-                IOUtils.toInputStream(tree.info()),
-                formCommitContent(tree)
-        );
+        reference.content = new StringBuilder()
+                .append(tree.info())
+                .append(formCommitContent(tree));
         return reference;
     }
 

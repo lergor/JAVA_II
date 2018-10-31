@@ -5,19 +5,17 @@ import com.google.gson.GsonBuilder;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import ru.ifmo.git.structs.CommitInfo;
+import ru.ifmo.git.structs.FileReference;
 import ru.ifmo.git.structs.HeadInfo;
 import ru.ifmo.git.structs.Usages;
 import ru.ifmo.git.tree.TreeEncoder;
@@ -27,10 +25,11 @@ public class GitLogger {
 
     private GitStructure git;
     private final Gson gson = new GsonBuilder().create();
-    private static final String ENCODING = "UTF-8";
     private static final String sep = System.getProperty("line.separator");
 
     private HeadInfo headInfo;
+    private String currentTreeHash;
+    private HashMap<String, Set<CommitInfo>> branchToHistory = new HashMap<>();
 
     GitLogger(GitStructure structure) {
         git = structure;
@@ -75,10 +74,9 @@ public class GitLogger {
         FileReference commit = new FileReference();
         commit.type = BlobType.COMMIT;
         commit.name = commitInfo.hash;
-        commit.content = new SequenceInputStream(
-                IOUtils.toInputStream(commit.type.asString() + commitInfo.hash + sep),
-                IOUtils.toInputStream(treeInfo + commitInfo.branch + sep)
-        );
+        commit.content = new StringBuilder()
+                .append(commit.type.asString()).append(commitInfo.hash).append(sep)
+                .append(treeInfo).append(commitInfo.branch).append(sep);
         return commit;
     }
 
@@ -86,7 +84,7 @@ public class GitLogger {
         HeadInfo headInfo = getHeadInfo();
         return "fatal: your current branch '" +
                 headInfo.branch() +
-                "' does not have any commits yet\n";
+                "' does not have any commits yet" + sep;
     }
 
     private static void writeToFile(Path file, String content, boolean append) throws GitException {
@@ -118,10 +116,14 @@ public class GitLogger {
     }
 
     public List<CommitInfo> getHistory(String branch) throws GitException {
+        if(branchToHistory.containsKey(branch)) {
+            return new ArrayList<>(branchToHistory.get(branch));
+        }
         File logFile = git.log().resolve(branch).toFile();
         List<CommitInfo> history = new ArrayList<>();
         List<CommitInfo> previousBranchHistory = new ArrayList<>();
         if (!logFile.exists()) {
+            branchToHistory.put(branch, new HashSet<>(history));
             return history;
         }
         try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
@@ -138,10 +140,14 @@ public class GitLogger {
         }
         Collections.reverse(history);
         history.addAll(previousBranchHistory);
+        branchToHistory.put(branch, new HashSet<>(history));
         return history;
     }
 
     public String currentTreeHash() throws GitException, IOException {
+        if(currentTreeHash != null) {
+            return currentTreeHash;
+        }
         String currentCommit = getHeadInfo().currentHash();
         if (currentCommit.isEmpty()) {
             return "";
@@ -149,7 +155,8 @@ public class GitLogger {
         Path file = GitFileManager.pathInStorage(git.storage(), currentCommit);
         if (Files.exists(file)) {
             String treeLine = Files.readAllLines(file).get(1);
-            return TreeEncoder.withoutMarker(treeLine).split("\t")[0];
+            currentTreeHash = TreeEncoder.withoutMarker(treeLine).split("\t")[0];
+            return currentTreeHash;
         }
         throw new GitException("missing commit " + currentCommit);
     }
@@ -170,20 +177,13 @@ public class GitLogger {
 
     public List<CommitInfo> getBranchCommits(String branch) throws GitException {
         File logFile = git.log().resolve(branch).toFile();
-        List<CommitInfo> branchHistory = new ArrayList<>();
+        List<CommitInfo> commits = new ArrayList<>();
+        List<CommitInfo> branchHistory = getHistory(branch);
         if (!logFile.exists()) {
             return branchHistory;
         }
-        try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
-            for (String line; (line = br.readLine()) != null; ) {
-                if (!line.startsWith(BlobType.BRANCH.asString())) {
-                    branchHistory.add(gson.fromJson(line, CommitInfo.class));
-                }
-            }
-        } catch (IOException e) {
-            throw new GitException("error while reading log for branch '" + branch + "'");
-        }
-        return branchHistory;
+        return branchHistory.stream().filter(i -> i.branch.equals(branch))
+                .collect(Collectors.toList());
     }
 
     private static <T> void writeInstance(T instance, File file, boolean append) throws GitException {

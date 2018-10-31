@@ -1,7 +1,6 @@
 package ru.ifmo.git.tree;
 
 import ru.ifmo.git.util.BlobType;
-import ru.ifmo.git.util.FileReference;
 
 import java.io.IOException;
 import java.nio.file.Files;

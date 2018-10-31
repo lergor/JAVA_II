@@ -1,16 +1,17 @@
 package ru.ifmo.git.tree;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import ru.ifmo.git.util.BlobType;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 
 public class TreeFile extends Tree {
 
-    private InputStream content = IOUtils.toInputStream("");
+    private StringBuilder content = new StringBuilder();
 
     TreeFile() {}
 
@@ -18,7 +19,7 @@ public class TreeFile extends Tree {
         super(file, root);
         setType(BlobType.FILE);
         if(Files.exists(file)) {
-            content = IOUtils.toInputStream(FileUtils.readFileToString(file.toFile()));
+            content.append(FileUtils.readFileToString(file.toFile()));
             setHash(TreeEncoder.getFileHash(fullPath()));
         }
     }
@@ -36,11 +37,15 @@ public class TreeFile extends Tree {
         return null;
     }
 
-    public InputStream content() {
-        return content;
+    public String content() {
+        return content.toString();
     }
 
-    public void setContent(InputStream content) {
-        this.content = content;
+    public List<String> contentAsLines() {
+        return Arrays.asList(content().split(System.lineSeparator()));
+    }
+
+    public void setContent(String content) {
+        this.content = new StringBuilder(content);
     }
 }

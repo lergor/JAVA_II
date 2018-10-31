@@ -31,30 +31,6 @@ public class CommandResult {
         return status;
     }
 
-    public void setStatus(ExitStatus status) {
-        this.status = status;
-    }
-
-    public Message getMessage() {
-        return message;
-    }
-
-    public void setMessage(Message message) {
-        this.message = message;
-    }
-
-    public void setMessage(String message) {
-        this.message = new Message(message);
-    }
-
-    public void setError(Throwable error) {
-        this.error = error;
-    }
-
-    public Throwable getError() {
-        return error;
-    }
-
     public void print() {
         if (status != ExitStatus.SUCCESS) {
             System.out.println("Exit with code " + status);
