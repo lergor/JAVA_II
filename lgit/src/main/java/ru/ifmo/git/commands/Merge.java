@@ -23,11 +23,6 @@ public class Merge implements GitCommand {
     private String commit;
 
     @Override
-    public boolean incorrectArgs() {
-        return (commit.length() < 6);
-    }
-
-    @Override
     public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
         return gitManager.merge(commit);
     }

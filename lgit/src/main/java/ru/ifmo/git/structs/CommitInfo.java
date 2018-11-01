@@ -1,9 +1,6 @@
 package ru.ifmo.git.structs;
 
 import java.nio.file.Path;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 public class CommitInfo {
     public String author;
@@ -12,9 +9,6 @@ public class CommitInfo {
     public String message;
     public String branch;
     public String rootDirectory;
-
-    public CommitInfo() {
-    }
 
     public void setAuthor(String author) {
         this.author = author;
@@ -32,15 +26,6 @@ public class CommitInfo {
         this.branch = branch;
     }
 
-    public void setAuthor() {
-        this.author = System.getProperty("user.name");
-    }
-
-    public void setTime() {
-        DateFormat df = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy ZZ");
-        this.time = df.format(Calendar.getInstance().getTime());
-    }
-
     public void setTime(String time) {
         this.time = time;
     }
@@ -55,6 +40,26 @@ public class CommitInfo {
                 "Author:\t" + author + sep +
                 "Date:\t" + time + sep +
                 "\t\t" + message + sep + sep;
+    }
+
+    public String author() {
+        return author;
+    }
+
+    public String branch() {
+        return branch;
+    }
+
+    public String hash() {
+        return hash;
+    }
+
+    public String rootDirectory() {
+        return rootDirectory;
+    }
+
+    public String time() {
+        return time;
     }
 
 }

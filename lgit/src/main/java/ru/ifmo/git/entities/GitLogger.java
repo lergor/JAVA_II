@@ -47,8 +47,8 @@ public class GitLogger {
     }
 
     private static String createCommitHash(CommitInfo info) {
-        String builder = info.time + info.rootDirectory +
-                info.author + info.branch;
+        String builder = info.time() + info.rootDirectory() +
+                info.author() + info.branch();
         return DigestUtils.sha1Hex(builder);
     }
 
@@ -72,11 +72,11 @@ public class GitLogger {
 
     public static FileReference formCommitReference(CommitInfo commitInfo, String treeInfo) {
         FileReference commit = new FileReference();
-        commit.type = BlobType.COMMIT;
-        commit.name = commitInfo.hash;
-        commit.content = new StringBuilder()
-                .append(commit.type.asString()).append(commitInfo.hash).append(sep)
-                .append(treeInfo).append(commitInfo.branch).append(sep);
+        commit.setType(BlobType.COMMIT);
+        commit.setName(commitInfo.hash());
+        commit.setContent(new StringBuilder()
+                .append(commit.type().asString()).append(commitInfo.hash()).append(sep)
+                .append(treeInfo).append(commitInfo.branch()).append(sep));
         return commit;
     }
 
@@ -87,7 +87,7 @@ public class GitLogger {
                 "' does not have any commits yet" + sep;
     }
 
-    private static void writeToFile(Path file, String content, boolean append) throws GitException {
+    static void writeToFile(Path file, String content, boolean append) throws GitException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile(), append))) {
             writer.write(content);
         } catch (IOException e) {
@@ -97,7 +97,7 @@ public class GitLogger {
 
     void changeHeadInfo(String hash, String branch) throws GitException {
         HeadInfo headInfo = getHeadInfo();
-        headInfo.branchName = branch;
+        headInfo.setBranchName(branch);
         changeHeadInfo(hash);
     }
 
@@ -116,7 +116,7 @@ public class GitLogger {
     }
 
     public List<CommitInfo> getHistory(String branch) throws GitException {
-        if(branchToHistory.containsKey(branch)) {
+        if (branchToHistory.containsKey(branch)) {
             return new ArrayList<>(branchToHistory.get(branch));
         }
         File logFile = git.log().resolve(branch).toFile();
@@ -126,8 +126,9 @@ public class GitLogger {
             branchToHistory.put(branch, new HashSet<>(history));
             return history;
         }
-        try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
-            for (String line; (line = br.readLine()) != null; ) {
+        try {
+            List<String> lines = Files.readAllLines(logFile.toPath());
+            for (String line : lines) {
                 if (line.startsWith(BlobType.BRANCH.asString())) {
                     previousBranchHistory = getHistory(line.substring(BlobType.size()));
                 } else {
@@ -135,7 +136,6 @@ public class GitLogger {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
             throw new GitException("error while reading log for " + branch);
         }
         Collections.reverse(history);
@@ -145,7 +145,7 @@ public class GitLogger {
     }
 
     public String currentTreeHash() throws GitException, IOException {
-        if(currentTreeHash != null) {
+        if (currentTreeHash != null) {
             return currentTreeHash;
         }
         String currentCommit = getHeadInfo().currentHash();
@@ -177,7 +177,6 @@ public class GitLogger {
 
     public List<CommitInfo> getBranchCommits(String branch) throws GitException {
         File logFile = git.log().resolve(branch).toFile();
-        List<CommitInfo> commits = new ArrayList<>();
         List<CommitInfo> branchHistory = getHistory(branch);
         if (!logFile.exists()) {
             return branchHistory;
@@ -227,6 +226,60 @@ public class GitLogger {
     }
 
     public void writeLog(CommitInfo commit) throws GitException {
-        GitLogger.writeInstance(commit, git.log().resolve(commit.branch).toFile(), true);
+        writeLog(commit, getHeadInfo().branch());
     }
+
+    public void writeLog(CommitInfo commit, String branch) throws GitException {
+        GitLogger.writeInstance(commit, git.log().resolve(branch).toFile(), true);
+    }
+
+    public static int getDifference(String currentHash, String incomingHash, List<CommitInfo> history) {
+        int incoming = -1;
+        int current = -1;
+        for (int i = 0; i < history.size(); i++) {
+            if (history.get(i).hash.equals(incomingHash)) {
+                incoming = i;
+            } else if (history.get(i).hash.equals(currentHash)) {
+                current = i;
+            }
+        }
+        return (incoming != -1 && current != -1) ? incoming - current : 0;
+    }
+
+    public void replaceLog(List<CommitInfo> newLog) throws GitException {
+        Path logFile = git.log().resolve(getHeadInfo().branch());
+        Gson gson = new GsonBuilder().create();
+        StringBuilder builder = new StringBuilder();
+        newLog.forEach(i -> builder.append(gson.toJson(i) + sep));
+        writeToFile(logFile, builder.toString(), false);
+    }
+
+    public void turnOffConflicting() throws GitException {
+        HeadInfo headInfo = getHeadInfo();
+        headInfo.mergeConflict = false;
+        headInfo.setConflictingFiles(new HashSet<>());
+        headInfo.setMergeBranch("");
+        writeHeadInfo(headInfo);
+    }
+
+    public void turnOnConflicting(Set<String> conflictingFiles, String mergeBranch) throws GitException {
+        HeadInfo headInfo = getHeadInfo();
+        headInfo.mergeConflict = true;
+        headInfo.setMergeBranch(mergeBranch);
+        headInfo.setConflictingFiles(conflictingFiles);
+        writeHeadInfo(headInfo);
+    }
+
+    boolean stillConflicting(Set<String> files) throws IOException {
+        for (String f : files) {
+            Path file = git.repo().resolve(f);
+            if (Files.exists(file)) {
+                if (FileUtils.readFileToString(file.toFile()).startsWith("<<<<<<<")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 }

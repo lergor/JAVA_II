@@ -10,6 +10,7 @@ import ru.ifmo.git.tree.TreeDirectory;
 import ru.ifmo.git.tree.TreeFile;
 import ru.ifmo.git.tree.TreeVisitor;
 import ru.ifmo.git.structs.Usages;
+import ru.ifmo.git.util.GitException;
 
 public class CleanerVisitor implements TreeVisitor {
 
@@ -38,7 +39,7 @@ public class CleanerVisitor implements TreeVisitor {
     }
 
     @Override
-    public void visit(TreeDirectory tree) throws IOException {
+    public void visit(TreeDirectory tree) throws IOException, GitException {
         visit(tree.children());
         decrementAndDelete(tree);
     }
@@ -46,4 +47,5 @@ public class CleanerVisitor implements TreeVisitor {
     public Usages usages() {
         return usages;
     }
+
 }

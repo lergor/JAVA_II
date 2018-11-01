@@ -2,8 +2,6 @@ package ru.ifmo.git.structs;
 
 import ru.ifmo.git.util.BlobType;
 
-import java.io.InputStream;
-
 public class FileReference {
 
     public BlobType type;
@@ -21,4 +19,17 @@ public class FileReference {
     public String content() {
         return content.toString();
     }
+
+    public void setContent(StringBuilder content) {
+        this.content = content;
+    }
+
+    public void setType(BlobType type) {
+        this.type = type;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
 }

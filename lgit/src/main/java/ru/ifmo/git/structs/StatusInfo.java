@@ -1,6 +1,7 @@
 package ru.ifmo.git.structs;
 
 import ru.ifmo.git.tree.Tree;
+import ru.ifmo.git.util.GitException;
 
 import java.io.IOException;
 import java.util.*;
@@ -12,7 +13,7 @@ public class StatusInfo {
 
     private static final String sep = System.lineSeparator();
 
-    public StatusInfo(Tree repo, Tree headCommit, Tree index) throws IOException {
+    public StatusInfo(Tree repo, Tree headCommit, Tree index) throws IOException, GitException {
         repoToHead = new Status(repo, headCommit);
         indexToHead = new Status(index, headCommit);
 
@@ -32,25 +33,18 @@ public class StatusInfo {
     public Set<String> getDeleted(boolean tracked) {
         return tracked ? indexToHead.getDeletedFiles() : repoToHead.getDeletedFiles();
     }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
+        builder.append(indexToHead.isEmpty() ? "" : "Tracked files:" + sep);
         builder.append(indexToHead.newFilesToString())
                 .append(indexToHead.modifiedFilesToString())
                 .append(indexToHead.deletedFilesToString());
-        builder.append(indexToHead.isEmpty() ? "" : "Untracked files:" + sep);
+        builder.append(repoToHead.isEmpty() ? "" : "Untracked files:" + sep);
         builder.append(repoToHead.newFilesToString())
                 .append(repoToHead.modifiedFilesToString())
                 .append(repoToHead.deletedFilesToString());
         return builder.toString();
-    }
-
-
-    public Status getIndexToHead() {
-        return indexToHead;
-    }
-
-    public Status getRepoToHead() {
-        return repoToHead;
     }
 
     public boolean isEmpty() {

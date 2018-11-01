@@ -1,6 +1,7 @@
 package ru.ifmo.git.tree;
 
 import ru.ifmo.git.util.BlobType;
+import ru.ifmo.git.util.GitException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,8 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 public abstract class Tree {
 
@@ -30,30 +29,25 @@ public abstract class Tree {
 
     public static List<Tree> createTrees(List<Path> files, Path root) throws IOException {
         List<Tree> list = new ArrayList<>();
-        for (Path f: files) {
+        for (Path f : files) {
             list.add(createTree(f, root));
         }
         return list;
     }
 
-    public static List<Tree> createDirectoryTrees(Path directory) throws IOException {
-        return Tree.createTrees(
-                Files   .list(directory)
-                        .filter(f -> !f.toAbsolutePath().toString().contains(METADIR))
-                        .collect(Collectors.toList()),
-                directory);
+    Tree() {
     }
-
-    Tree() {}
 
     Tree(Path file, Path root) {
         this.root = root;
         path = root.relativize(file).toString();
     }
 
-    public abstract void accept(TreeVisitor visitor) throws IOException;
+    public abstract void accept(TreeVisitor visitor) throws IOException, GitException;
 
     public abstract Tree find(String path);
+
+    public abstract boolean isEmpty();
 
     public BlobType type() {
         return type;

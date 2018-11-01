@@ -2,14 +2,9 @@ package ru.ifmo.git.structs;
 
 import java.util.HashMap;
 
-
 public class Usages {
 
     public HashMap<String, Integer> hashToCount = new HashMap<>();
-
-    public HashMap<String, Integer> map() {
-        return hashToCount;
-    }
 
     public void increment(String hash) {
         hashToCount.put(hash, hashToCount.getOrDefault(hash, 0) + 1);

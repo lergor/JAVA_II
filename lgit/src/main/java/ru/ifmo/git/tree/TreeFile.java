@@ -2,6 +2,7 @@ package ru.ifmo.git.tree;
 
 import org.apache.commons.io.FileUtils;
 import ru.ifmo.git.util.BlobType;
+import ru.ifmo.git.util.GitException;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -25,13 +26,13 @@ public class TreeFile extends Tree {
     }
 
     @Override
-    public void accept(TreeVisitor visitor) throws IOException {
+    public void accept(TreeVisitor visitor) throws IOException, GitException {
         visitor.visit(this);
     }
 
     @Override
     public Tree find(String file) {
-        if(path.equals(file)) {
+        if(file.equals(path)) {
             return this;
         }
         return null;
@@ -47,5 +48,10 @@ public class TreeFile extends Tree {
 
     public void setContent(String content) {
         this.content = new StringBuilder(content);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return type().equals(BlobType.FILE) && path.isEmpty() && content().isEmpty();
     }
 }

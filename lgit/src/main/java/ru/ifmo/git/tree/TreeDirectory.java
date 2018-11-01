@@ -1,6 +1,7 @@
 package ru.ifmo.git.tree;
 
 import ru.ifmo.git.util.BlobType;
+import ru.ifmo.git.util.GitException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,7 +61,7 @@ public class TreeDirectory extends Tree {
     }
 
     @Override
-    public void accept(TreeVisitor visitor) throws IOException {
+    public void accept(TreeVisitor visitor) throws IOException, GitException {
         visitor.visit(this);
     }
 
@@ -72,6 +73,9 @@ public class TreeDirectory extends Tree {
 
     @Override
     public Tree find(String file) {
+        if (type().equals(BlobType.COMMIT)) {
+            return children().get(0).find(file);
+        }
         if (path.equals(file)) {
             return this;
         }
@@ -85,5 +89,10 @@ public class TreeDirectory extends Tree {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return type().equals(BlobType.DIRECTORY) && path.isEmpty() && children.isEmpty();
     }
 }

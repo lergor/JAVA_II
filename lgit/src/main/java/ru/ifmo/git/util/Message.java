@@ -1,8 +1,5 @@
 package ru.ifmo.git.util;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-
 public class Message {
 
     private StringBuilder builder;

@@ -8,10 +8,6 @@ import ru.ifmo.git.util.*;
 
 public interface GitCommand {
 
-    default boolean incorrectArgs() {
-        return false;
-    }
-
     default boolean gitNotInited(GitStructure tree) {
         return !tree.exists();
     }
@@ -22,9 +18,6 @@ public interface GitCommand {
         String name = this.getClass().getSimpleName().toLowerCase();
         if (gitNotInited(gitManager.structure())) {
             return new CommandResult(ExitStatus.ERROR, "fatal: Not a l_git repository");
-        }
-        if (incorrectArgs()) {
-            return new CommandResult(ExitStatus.ERROR, name + ": incorrect arguments");
         }
         try {
             return doWork(gitManager);

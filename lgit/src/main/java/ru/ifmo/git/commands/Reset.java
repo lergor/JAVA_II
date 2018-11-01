@@ -28,11 +28,6 @@ public class Reset implements GitCommand {
     private String revision;
 
     @Override
-    public boolean incorrectArgs() {
-        return (revision.length() < 6);
-    }
-
-    @Override
     public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
         return gitManager.reset(revision);
     }

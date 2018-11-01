@@ -1,5 +1,11 @@
 package ru.ifmo.git.entities;
 
+import ru.ifmo.git.tree.Tree;
+import ru.ifmo.git.tree.TreeEncoder;
+import ru.ifmo.git.tree.visitors.SaverVisitor;
+import ru.ifmo.git.util.BlobType;
+import ru.ifmo.git.util.GitException;
+
 import java.io.IOException;
 
 import java.nio.file.Files;
@@ -19,7 +25,7 @@ public class GitFileManager {
         storage = gitStructure.storage();
     }
 
-    private Path getDir(String blob) {
+    public Path getDir(String blob) {
         return storage.resolve(blob.substring(0, dirNameLen));
     }
 
@@ -28,11 +34,13 @@ public class GitFileManager {
     }
 
     public Optional<Path> findFileInStorage(String hash) throws IOException {
-        List<Path> blobs;
-        blobs = Files.list(getDir(hash)).collect(Collectors.toList());
-        for (Path blob : blobs) {
-            if (blob.toFile().getName().startsWith(hash.substring(dirNameLen))) {
-                return Optional.of(blob);
+        if(!hash.isEmpty()) {
+            List<Path> blobs;
+            blobs = Files.list(getDir(hash)).collect(Collectors.toList());
+            for (Path blob : blobs) {
+                if (blob.toFile().getName().startsWith(hash.substring(dirNameLen))) {
+                    return Optional.of(blob);
+                }
             }
         }
         return Optional.empty();
@@ -70,4 +78,18 @@ public class GitFileManager {
                 .resolve(hash.substring(dirNameLen));
     }
 
+    public boolean restoreCommit(String revision, Path destination) throws IOException, GitException {
+        Optional<Path> commit = findFileInStorage(revision);
+        if (commit.isPresent()) {
+            TreeEncoder encoder = new TreeEncoder(storage);
+            Tree tree = encoder.decode(commit.get());
+            if (!tree.type().equals(BlobType.COMMIT)) {
+                return false;
+            }
+            tree.setRoot(destination);
+            tree.accept(new SaverVisitor());
+            return true;
+        }
+        return true;
+    }
 }

@@ -31,11 +31,6 @@ public class Remove implements GitCommand {
     private List<Path> files;
 
     @Override
-    public boolean incorrectArgs() {
-        return files.isEmpty();
-    }
-
-    @Override
     public CommandResult doWork(GitManager gitManager) throws IOException {
         return gitManager.remove(files);
     }

@@ -8,10 +8,9 @@ import ru.ifmo.git.tree.TreeFile;
 import ru.ifmo.git.tree.TreeVisitor;
 import ru.ifmo.git.structs.FileReference;
 import ru.ifmo.git.structs.Usages;
+import ru.ifmo.git.util.GitException;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -22,13 +21,14 @@ public class CommitVisitor implements TreeVisitor {
 
     private List<FileReference> references = new ArrayList<>();
 
-    public CommitVisitor() {}
+    public CommitVisitor() {
+    }
 
     public void saveReferences(Path storage) throws IOException {
         for (FileReference r : references) {
             Path file = GitFileManager.pathInStorage(storage, r.name);
-            if(Files.notExists(file)) {
-                if(Files.notExists(file.getParent())) {
+            if (Files.notExists(file)) {
+                if (Files.notExists(file.getParent())) {
                     Files.createDirectories(file.getParent());
                 }
                 Files.createFile(file);
@@ -65,7 +65,7 @@ public class CommitVisitor implements TreeVisitor {
     }
 
     @Override
-    public void visit(TreeDirectory tree) throws IOException {
+    public void visit(TreeDirectory tree) throws IOException, GitException {
         references.add(formReference(tree));
         visit(tree.children());
     }

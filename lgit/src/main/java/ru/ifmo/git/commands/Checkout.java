@@ -54,12 +54,6 @@ public class Checkout implements GitCommand {
     private String branchName;
 
     @Override
-    public boolean incorrectArgs() {
-        return (revision == null || revision.length() < 6) &&
-                (files == null) && (branchName == null);
-    }
-
-    @Override
     public CommandResult doWork(GitManager gitManager) throws GitException, IOException {
         if (revision != null) {
             return gitManager.checkout(revision);

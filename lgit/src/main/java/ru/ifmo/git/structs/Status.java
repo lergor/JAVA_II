@@ -2,27 +2,27 @@ package ru.ifmo.git.structs;
 
 import ru.ifmo.git.tree.Tree;
 import ru.ifmo.git.tree.visitors.PathAndHashCollector;
+import ru.ifmo.git.util.GitException;
 
 import java.io.IOException;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class Status {
 
-    public Set<String> newFiles = new HashSet<>();
-    public Set<String> deletedFiles = new HashSet<>();
-    public Set<String> modifiedFiles = new HashSet<>();
+    private Set<String> newFiles = new HashSet<>();
+    private Set<String> deletedFiles = new HashSet<>();
+    private Set<String> modifiedFiles = new HashSet<>();
 
     private static final String sep = System.lineSeparator();
 
-    public Status() {}
-
-    public Status(Tree from, Tree to) throws IOException {
+    public Status(Tree from, Tree to) throws IOException, GitException {
         buildStatus(from, to);
     }
 
-    public void buildStatus(Tree from, Tree to) throws IOException {
+    public void buildStatus(Tree from, Tree to) throws IOException, GitException {
         Map<String, String> toFiles = collectPaths(to);
         Map<String, String> fromFiles = collectPaths(from);
 
@@ -30,7 +30,7 @@ public class Status {
         for (String path : files) {
             String fromHash = fromFiles.remove(path);
             String toHash = toFiles.remove(path);
-            if(!path.isEmpty()) {
+            if (!path.isEmpty()) {
                 if (fromHash != null && toHash != null && !toHash.equals(fromHash)) {
                     modifiedFiles.add(path);
                 } else if (fromHash == null && toHash != null) {
@@ -43,7 +43,7 @@ public class Status {
         newFiles.addAll(fromFiles.keySet());
     }
 
-    private static Map<String, String> collectPaths(Tree tree) throws IOException {
+    private static Map<String, String> collectPaths(Tree tree) throws IOException, GitException {
         PathAndHashCollector visitor = new PathAndHashCollector();
         tree.accept(visitor);
         return visitor.getPathsToHashes();
@@ -63,7 +63,7 @@ public class Status {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        writeInfo("new file: ", newFiles, builder);
+        writeInfo("new: ", newFiles, builder);
         writeInfo("modified: ", modifiedFiles, builder);
         writeInfo("deleted: ", deletedFiles, builder);
         return builder.toString();
@@ -71,7 +71,7 @@ public class Status {
 
     private static void writeInfo(String prefix, Set<String> files, StringBuilder builder) {
         files.forEach(f -> builder.append(prefix).append(f).append(sep));
-        if(!files.isEmpty()) {
+        if (!files.isEmpty()) {
             builder.append(sep);
         }
     }
@@ -82,7 +82,7 @@ public class Status {
 
 
     public String newFilesToString() {
-        return filesToString(newFiles, "new file: ");
+        return filesToString(newFiles, "new: ");
     }
 
     public String deletedFilesToString() {
@@ -96,9 +96,10 @@ public class Status {
     private String filesToString(Set<String> files, String prefix) {
         StringBuilder builder = new StringBuilder();
         files.forEach(f -> builder.append(prefix).append(f).append(sep));
-        if(!files.isEmpty()) {
+        if (!files.isEmpty()) {
             builder.append(sep);
         }
         return builder.toString();
     }
+
 }

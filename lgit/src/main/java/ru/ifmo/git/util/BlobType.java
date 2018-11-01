@@ -29,4 +29,5 @@ public enum BlobType {
     static public int size() {
         return 3;
     }
+
 }

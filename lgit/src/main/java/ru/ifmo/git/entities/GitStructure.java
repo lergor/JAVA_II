@@ -59,10 +59,6 @@ public class GitStructure {
         return headFile;
     }
 
-    Path git() {
-        return metaDir;
-    }
-
     Path usageInfo() {
         return usageInfo;
     }

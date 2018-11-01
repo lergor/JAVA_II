@@ -13,6 +13,7 @@ import java.util.List;
 import ru.ifmo.git.entities.GitFileManager;
 import ru.ifmo.git.entities.GitManager;
 import ru.ifmo.git.util.CommandResult;
+import ru.ifmo.git.util.ExitStatus;
 import ru.ifmo.git.util.GitException;
 
 @Command(
@@ -33,12 +34,10 @@ public class Add implements GitCommand {
     private List<Path> files;
 
     @Override
-    public boolean incorrectArgs() {
-        return !GitFileManager.checkFilesExist(files);
-    }
-
-    @Override
     public CommandResult doWork(GitManager gitManager) throws IOException, GitException {
+        if (!GitFileManager.checkFilesExist(files)) {
+            return new CommandResult(ExitStatus.ERROR, "add: incorrect arguments");
+        }
         return gitManager.add(files);
     }
 
