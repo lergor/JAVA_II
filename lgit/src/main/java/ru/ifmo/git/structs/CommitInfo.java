@@ -10,6 +10,7 @@ public class CommitInfo {
     public String branch;
     public String rootDirectory;
     public String treeHash;
+    public String prevCommitHash;
 
     public void setAuthor(String author) {
         this.author = author;
@@ -69,5 +70,13 @@ public class CommitInfo {
 
     public String treeHash() {
         return treeHash;
+    }
+
+    public void setPrevCommitHash(String prevCommitHash) {
+        this.prevCommitHash = prevCommitHash;
+    }
+
+    public String previousCommitHash() {
+        return prevCommitHash;
     }
 }

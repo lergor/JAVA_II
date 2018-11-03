@@ -44,6 +44,7 @@ public class GitLogger {
         info.setTreeHash(treeHash);
         info.setBranch(getHeadInfo().branch());
         info.setHash(createCommitHash(info));
+        info.setPrevCommitHash(getHeadInfo().currentHash());
         return info;
     }
 
@@ -231,6 +232,9 @@ public class GitLogger {
     }
 
     public void writeLog(CommitInfo commit, String branch) throws GitException {
+        List<CommitInfo> currentHistory = branchToHistory.getOrDefault(branch, new ArrayList<>());
+        currentHistory.add(0, commit);
+        branchToHistory.put(branch, currentHistory);
         GitLogger.writeInstance(commit, git.log().resolve(branch).toFile(), true);
     }
 
@@ -244,7 +248,7 @@ public class GitLogger {
                 current = i;
             }
         }
-        return (incoming != -1 && current != -1) ? incoming - current : 0;
+        return (incoming != -1 && current != -1) ? current - incoming : 0;
     }
 
     public void replaceLog(List<CommitInfo> newLog) throws GitException {

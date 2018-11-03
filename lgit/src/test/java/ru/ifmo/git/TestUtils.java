@@ -29,6 +29,10 @@ class TestUtils {
         assertThat(result.getStatus()).isEqualByComparingTo(ExitStatus.SUCCESS);
     }
 
+    static void isFailResultOf(CommandResult result) {
+        assertThat(result.getStatus()).isEqualByComparingTo(ExitStatus.FAILURE);
+    }
+
     static void createRepository(TemporaryFolder folder) throws IOException {
         files.clear();
 
@@ -72,7 +76,6 @@ class TestUtils {
     }
 
     static List<String> makeStatusRepoToIndex(TemporaryFolder folder) throws IOException, GitException {
-
         GitManager manager = new GitManager(folder.getRoot().toPath());
         String modifiedFile = repoStructure.get(1);
         FileUtils.writeStringToFile(manager.structure().repo()
@@ -89,18 +92,37 @@ class TestUtils {
     static String createRepositoryWithBranch(TemporaryFolder folder, boolean withConflict)
             throws GitException, IOException {
         createRepositoryWithHistory(folder);
+
         GitManager manager = new GitManager(folder.getRoot().toPath());
         isSuccessResultOf(manager.checkoutNewBranch(branchName));
 
         List<String> statusFiles = makeStatusRepoToIndex(folder);
+        List<Path> paths = statusFiles.stream()
+                .map(f -> manager.structure().repo().resolve(f)).collect(Collectors.toList());
         if (!withConflict) {
-            statusFiles = Collections.singletonList(statusFiles.get(0));
+            isSuccessResultOf(manager.checkout(Arrays.asList(paths.get(1), paths.get(2))));
+            paths = Collections.singletonList(paths.get(0));
         }
-        isSuccessResultOf(manager.add(statusFiles.stream()
-                .map(f -> manager.structure().repo().resolve(f)).collect(Collectors.toList())));
+        isSuccessResultOf(manager.add(paths));
         isSuccessResultOf(manager.commit("commit new branch"));
 
         return branchName;
+    }
+
+    static String createRepoBeforeMergeWithConflicts(TemporaryFolder folder) throws GitException, IOException {
+        String branch = createRepositoryWithBranch(folder, true);
+        GitManager manager = new GitManager(folder.getRoot().toPath());
+
+        Path conflictingFile = manager.structure().repo().resolve("lol");
+
+        isSuccessResultOf(manager.checkout("master"));
+
+        FileUtils.writeStringToFile(conflictingFile.toFile(), "also new content!");
+
+        isSuccessResultOf(manager.add(Collections.singletonList(conflictingFile)));
+        isSuccessResultOf(manager.commit("make conflict"));
+
+        return branch;
     }
 
 }

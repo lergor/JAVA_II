@@ -121,7 +121,7 @@ public class TestCommands1 {
 
         String log = result.getMessage().read();
         List<CommitInfo> history = manager.logger().getHistory();
-        for (CommitInfo i: history) {
+        for (CommitInfo i : history) {
             assertTrue(log.contains(i.hash));
             assertTrue(log.contains(i.time));
             assertTrue(log.contains(i.message));

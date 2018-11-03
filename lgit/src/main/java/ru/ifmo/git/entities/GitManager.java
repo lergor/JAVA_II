@@ -29,7 +29,7 @@ public class GitManager {
     private GitLogger logger;
 
     private static final String sep = System.getProperty("line.separator");
-    private static final String tab = System.getProperty("\t");
+    private static final String tab = "\t";
 
     public GitManager(Path directory) {
         git = new GitStructure(directory);
@@ -72,7 +72,7 @@ public class GitManager {
         HeadInfo headInfo = logger.getHeadInfo();
         if (headInfo.merging() && headInfo.mergeConflictFlag()) {
             for (Path p: files) {
-                headInfo.getConflictingFiles().remove(git.repo().resolve(p).toString());
+                headInfo.getConflictingFiles().remove(git.repo().relativize(p).toString());
             }
             if(headInfo.getConflictingFiles().isEmpty()) {
                 logger().turnOffConflicting();
@@ -357,6 +357,7 @@ public class GitManager {
             }
             headInfo.moveBoth(head);
         } else {
+            GitFileManager.clearDirectory(git.repo());
             restoreCommitToIndexAndRepo(head, null);
         }
         logger.changeHeadInfo(head, branch);
@@ -410,20 +411,21 @@ public class GitManager {
         Optional<Path> commitFile = fileManager.findFileInStorage(incomingHash);
         if (commitFile.isPresent()) {
             String incomingBranch = Files.readAllLines(commitFile.get()).get(2);
-            String currentHash = logger.currentTreeHash();
+            String currentHash = headInfo.currentHash();
 
-            List<CommitInfo> history = logger.getHistory(incomingBranch);
-            int difference = GitLogger.getDifference(currentHash, incomingHash, history);
-            if (difference > 0) {
-                CommandResult res = checkout(incomingHash);
-                if (res.getStatus() != ExitStatus.SUCCESS) {
-                    return res;
+            List<CommitInfo> branchCommits = logger.getBranchCommits(incomingBranch);
+            if(branchCommits.size() > 0
+                    && branchCommits.get(branchCommits.size() - 1).previousCommitHash().equals(currentHash)) {
+                List<CommitInfo> history = logger.getHistory(incomingBranch);
+                int difference = GitLogger.getDifference(currentHash, incomingHash, history);
+
+                if (difference > 0) {
+                    return commitFastForward(incomingBranch, incomingHash);
+                } else if (difference < 0) {
+                    return new CommandResult(ExitStatus.FAILURE, "Already up-to-date.");
                 }
-                logger.changeHeadInfo(incomingHash);
-                return new CommandResult(ExitStatus.SUCCESS, "Fast forward");
-            } else if (difference < 0) {
-                return new CommandResult(ExitStatus.FAILURE, "Already up-to-date.");
             }
+
 
             TreeEncoder encoder = new TreeEncoder(git.storage());
             Tree incomingTree = encoder.decode(incomingHash);
@@ -445,6 +447,25 @@ public class GitManager {
         }
         return new CommandResult(ExitStatus.FAILURE,
                 "No such branch or commit '" + incomingHash + "'");
+    }
+
+    private CommandResult commitFastForward(String incomingBranch, String incomingHash) throws GitException, IOException {
+        String infoMessage = "fast forward merge branch '" + incomingBranch +
+                "' to branch '" + logger.getHeadInfo().branch() + "'";
+
+        TreeEncoder encoder = new TreeEncoder(git.storage());
+        Tree incomingTree = encoder.decode(incomingHash);
+
+        incomingTree.setRoot(git.index());
+        incomingTree.accept(new SaverVisitor());
+        incomingTree.setRoot(git.repo());
+        incomingTree.accept(new SaverVisitor());
+
+        CommandResult res = commit(infoMessage);
+        if (!res.getStatus().equals(ExitStatus.SUCCESS)) {
+            return res;
+        }
+        return new CommandResult(ExitStatus.SUCCESS, "Fast forward");
     }
 
     private CommandResult commitMerge(String incomingBranch) throws GitException, IOException {

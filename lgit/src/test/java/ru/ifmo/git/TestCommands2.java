@@ -126,7 +126,6 @@ public class TestCommands2 extends TestUtils {
 
         assertFalse(status.contains("new: "));
         assertFalse(status.contains("deleted: "));
-//        assertFalse(status.contains("Untracked files:")); // ???
     }
 
     @Test
@@ -198,6 +197,5 @@ public class TestCommands2 extends TestUtils {
         assertThat(currentContent).isEqualTo(addedContent);
         assertThat(currentContent).isEqualTo(commitedContent);
     }
-
 
 }
