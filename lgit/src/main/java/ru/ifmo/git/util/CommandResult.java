@@ -31,6 +31,10 @@ public class CommandResult {
         return status;
     }
 
+    public Message getMessage() {
+        return message;
+    }
+
     public void print() {
         if (status != ExitStatus.SUCCESS) {
             System.out.println("Exit with code " + status);

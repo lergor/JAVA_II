@@ -47,7 +47,7 @@ public class GitStructure {
         return indexDir;
     }
 
-    Path log() {
+    public Path log() {
         return logDir;
     }
 

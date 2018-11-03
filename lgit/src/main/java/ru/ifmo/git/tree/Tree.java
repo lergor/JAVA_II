@@ -40,7 +40,7 @@ public abstract class Tree {
 
     Tree(Path file, Path root) {
         this.root = root;
-        path = root.relativize(file).toString();
+        path = root.toAbsolutePath().relativize(file.toAbsolutePath()).toString();
     }
 
     public abstract void accept(TreeVisitor visitor) throws IOException, GitException;

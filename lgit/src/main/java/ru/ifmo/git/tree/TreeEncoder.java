@@ -1,6 +1,7 @@
 package ru.ifmo.git.tree;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
@@ -88,7 +89,8 @@ public class TreeEncoder {
         tree.setType(readMarker(infoLine));
         tree.setHash(HashAndName[0]);
         tree.setPath(HashAndName.length > 1 ? HashAndName[1] : "");
-        tree.setContent(IOUtils.toString(reader));
+        String s = IOUtils.toString(reader);
+        tree.setContent(s);
 
         reader.close();
         return tree;
@@ -102,8 +104,10 @@ public class TreeEncoder {
         tree.setHash(decoded.hash());
         tree.setPath(decoded.path());
 
-        List<String> components = decoded.contentAsLines();
-        tree.setChildren(decodeComponents(components));
+        if(!decoded.content().isEmpty()) {
+            List<String> components = decoded.contentAsLines();
+            tree.setChildren(decodeComponents(components));
+        }
         return tree;
     }
 

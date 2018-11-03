@@ -82,15 +82,15 @@ public class Status {
 
 
     public String newFilesToString() {
-        return filesToString(newFiles, "new: ");
+        return filesToString(newFiles, "\t" + "new: ");
     }
 
     public String deletedFilesToString() {
-        return filesToString(deletedFiles, "deleted: ");
+        return filesToString(deletedFiles, "\t" + "deleted: ");
     }
 
     public String modifiedFilesToString() {
-        return filesToString(modifiedFiles, "modified: ");
+        return filesToString(modifiedFiles, "\t" + "modified: ");
     }
 
     private String filesToString(Set<String> files, String prefix) {

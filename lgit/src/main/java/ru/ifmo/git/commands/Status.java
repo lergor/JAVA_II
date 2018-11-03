@@ -25,7 +25,7 @@ public class Status implements GitCommand {
     )
     boolean usageHelpRequested;
 
-    @Parameters(arity = "1", paramLabel = "<revision>")
+    @Parameters(arity = "?", paramLabel = "<revision>")
     private String revision;
 
     @Override

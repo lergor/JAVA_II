@@ -11,6 +11,7 @@ public class HeadInfo {
     public Boolean mergeConflict = false;
     public Set<String> conflictingFiles = new HashSet<>();
     public String mergeBranch = "";
+    public boolean merging = false;
 
     public HeadInfo() {
         branchName = "master";
@@ -53,6 +54,13 @@ public class HeadInfo {
         return conflictingFiles;
     }
 
+    public String getConflictingFilesAsString() {
+        StringBuilder builder = new StringBuilder();
+        String sep = System.lineSeparator();
+        conflictingFiles.forEach( f -> builder.append("\t").append(f).append(sep));
+        return builder.toString();
+    }
+
     public void setConflictingFiles(Set<String> conflictingFiles) {
         this.conflictingFiles = conflictingFiles;
     }
@@ -63,5 +71,17 @@ public class HeadInfo {
 
     public String mergeBranch() {
         return mergeBranch;
+    }
+
+    public boolean merging() {
+         return merging;
+    }
+
+    public void setMerging(boolean merging) {
+        this.merging = merging;
+    }
+
+    public void setMergeConflict(Boolean mergeConflict) {
+        this.mergeConflict = mergeConflict;
     }
 }

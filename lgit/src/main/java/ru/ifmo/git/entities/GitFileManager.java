@@ -54,6 +54,7 @@ public class GitFileManager {
     }
 
     static public void removeAll(List<Path> files) throws IOException {
+
         for (Path file : files) {
             if (Files.isDirectory(file)) {
                 clearDirectory(file);
@@ -90,6 +91,6 @@ public class GitFileManager {
             tree.accept(new SaverVisitor());
             return true;
         }
-        return true;
+        return false;
     }
 }

@@ -1,5 +1,7 @@
 package ru.ifmo.git.entities;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import picocli.CommandLine;
 
 import ru.ifmo.git.commands.GitCommand;
@@ -15,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -26,6 +29,7 @@ public class GitManager {
     private GitLogger logger;
 
     private static final String sep = System.getProperty("line.separator");
+    private static final String tab = System.getProperty("\t");
 
     public GitManager(Path directory) {
         git = new GitStructure(directory);
@@ -65,9 +69,14 @@ public class GitManager {
     }
 
     public CommandResult add(List<Path> files) throws IOException, GitException {
-        if (logger.getHeadInfo().mergeConflictFlag()) {
-            return new CommandResult(ExitStatus.FAILURE,
-                    "Unresolved conflict; fix conflicts first.");
+        HeadInfo headInfo = logger.getHeadInfo();
+        if (headInfo.merging() && headInfo.mergeConflictFlag()) {
+            for (Path p: files) {
+                headInfo.getConflictingFiles().remove(git.repo().resolve(p).toString());
+            }
+            if(headInfo.getConflictingFiles().isEmpty()) {
+                logger().turnOffConflicting();
+            }
         }
         Tree repository = Tree.createTree(git.repo());
         repository.setRoot(git.index());
@@ -79,10 +88,8 @@ public class GitManager {
             Tree lastCommit = new TreeEncoder(git.storage()).decode(currentTreeHash);
             StatusInfo statusInfo = new StatusInfo(repository, lastCommit, index);
 
-            files = files.stream()
-                    .map(f -> git.index().resolve(git.repo().relativize(f)))
-                    .collect(Collectors.toList());
-            for (Tree tree : Tree.createTrees(files, git.index())) {
+            for (Tree tree : Tree.createTrees(files, git.repo())) {
+                tree.setRoot(git.index());
                 if (statusInfo.getDeleted(false).contains(tree.path())) {
                     tree.accept(new DeleteVisitor());
                 }
@@ -92,9 +99,21 @@ public class GitManager {
     }
 
     public CommandResult commit(String message) throws GitException, IOException {
-        if (logger.getHeadInfo().mergeConflictFlag()) {
-            return new CommandResult(ExitStatus.FAILURE,
-                    "Unresolved conflict; fix conflicts first.");
+        HeadInfo headInfo = logger.getHeadInfo();
+        if (headInfo.merging()) {
+            if(headInfo.mergeConflictFlag()) {
+                Message msg = new Message();
+                msg.write("error: Committing is not possible because you have unmerged files." + sep);
+                msg.write("hint: Fix them up in the work tree, and then use 'git add/rm <file>'" + sep);
+                msg.write("hint: as appropriate to mark resolution and make a commit." + sep);
+                msg.write("fatal: Exiting because of an unresolved conflict." + sep);
+                return new CommandResult(ExitStatus.ERROR, msg);
+            } else {
+                if(message == null || message.isEmpty()) {
+                    message = "Merge branch " + headInfo.mergeBranch() + sep;
+                }
+                logger.turnOffMerging();
+            }
         }
         CommitVisitor visitor = new CommitVisitor();
         Tree tree = Tree.createTree(git.index());
@@ -106,7 +125,7 @@ public class GitManager {
         }
         tree.accept(visitor);
 
-        CommitInfo commitInfo = logger.fillCommitInfo(message);
+        CommitInfo commitInfo = logger.fillCommitInfo(message, tree.hash());
         FileReference commit = GitLogger.formCommitReference(commitInfo, tree.info());
 
         visitor.references().add(commit);
@@ -157,6 +176,7 @@ public class GitManager {
         }
         String failMessage = "reset: '" + revision + "' unknown revision";
         List<CommitInfo> commitsToDelete = getHistoryFromCommit(revision);
+
         if (commitsToDelete.isEmpty()) {
             return new CommandResult(ExitStatus.FAILURE, failMessage);
         }
@@ -211,21 +231,30 @@ public class GitManager {
             }
             return successResult;
         }
-        Tree lastCommitTree = new TreeEncoder(git.storage()).decode(lastCommit);
-        List<Tree> nodes = new ArrayList<>();
-        for (Path f : files) {
-            String file = git.repo().relativize(f).toString();
-            Tree node = lastCommitTree.find(file);
-            if (node == null) {
-                return new CommandResult(ExitStatus.FAILURE, "No such file '" + file + "' found");
-            }
-            node.setRoot(git.index());
-            node.accept(new SaverVisitor());
-            node.setRoot(git.repo());
-            node.accept(new SaverVisitor());
-
-        }
+        restoreCommitToIndexAndRepo(lastCommit, files);
         return successResult;
+    }
+
+    private void restoreCommitToIndexAndRepo(String commit, List<Path> files) throws IOException, GitException {
+        Tree lastCommitTree = new TreeEncoder(git.storage()).decode(commit);
+        if(files != null) {
+            for (Path f : files) {
+                String file = git.repo().relativize(f.toAbsolutePath()).toString();
+                Tree node = lastCommitTree.find(file);
+                if (node == null) {
+                    throw new GitException("No such file '" + file + "' found");
+                }
+                node.setRoot(git.index());
+                node.accept(new SaverVisitor());
+                node.setRoot(git.repo());
+                node.accept(new SaverVisitor());
+            }
+        } else {
+            lastCommitTree.setRoot(git.index());
+            lastCommitTree.accept(new SaverVisitor());
+            lastCommitTree.setRoot(git.repo());
+            lastCommitTree.accept(new SaverVisitor());
+        }
     }
 
     public CommandResult remove(List<Path> files) throws IOException {
@@ -234,31 +263,43 @@ public class GitManager {
                 .collect(Collectors.toList());
         GitFileManager.removeAll(filesInIndex);
 
-        List<Path> filesInCWD = files.stream()
-                .map(git.repo()::resolve)
-                .collect(Collectors.toList());
-        GitFileManager.removeAll(filesInCWD);
+//        List<Path> filesInCWD = files.stream()
+//                .map(git.repo()::resolve)
+//                .collect(Collectors.toList());
+//        GitFileManager.removeAll(filesInCWD);
 
         return new CommandResult(ExitStatus.SUCCESS, "rm: done!");
     }
 
     public CommandResult status(String revision) throws GitException, IOException {
         HeadInfo headInfo = logger.getHeadInfo();
-        Message info = new Message();
-        info.write("On branch " + headInfo.branch() + sep);
+        Message message = new Message();
+        message.write("On branch " + headInfo.branch() + sep);
+
+        if(headInfo.merging()) {
+            if (headInfo.mergeConflictFlag()) {
+                message.write("You have unmerged paths." + sep);
+                message.write("Unmerged paths:" + sep);
+                message.write(headInfo.getConflictingFilesAsString());
+                return new CommandResult(ExitStatus.FAILURE, message);
+            } else {
+                message.write("All conflicts fixed but you are still merging." + sep);
+            }
+        }
 
         if ((revision == null || revision.isEmpty())) {
             String currentTreeHash = logger.currentTreeHash();
+
             if (currentTreeHash.isEmpty()) {
-                List<String> indexFiles = Files.list(git.index())
-                        .map(f -> git.index().relativize(f).toString())
-                        .collect(Collectors.toList());
-                if (indexFiles.isEmpty()) {
-                    info.write("No commits yet");
+                Tree index = Tree.createTree(git.index());
+                Tree repo = Tree.createTree(git.repo());
+                Status repoToIndex = new Status(repo, index);
+                if (index.isEmpty()  && repo.isEmpty() && !headInfo.mergeConflictFlag()) {
+                    message.write("No commits yet");
                 } else {
-                    indexFiles.forEach(f -> info.write("new : " + f + sep));
+                    message.write(repoToIndex.toString());
                 }
-                return new CommandResult(ExitStatus.SUCCESS, info);
+                return new CommandResult(ExitStatus.SUCCESS, message);
             }
             revision = currentTreeHash;
         }
@@ -270,12 +311,11 @@ public class GitManager {
 
             StatusInfo statusInfo = new StatusInfo(repo, lastCommit, index);
             if (statusInfo.isEmpty()) {
-                info.write("No changed files");
+                message.write("No changed files");
             } else {
-                info.write(sep);
-                info.write(statusInfo.toString());
+                message.write(statusInfo.toString());
             }
-            return new CommandResult(ExitStatus.SUCCESS, info);
+            return new CommandResult(ExitStatus.SUCCESS, message);
         }
         String failMessage = "status: '" + revision + "' unknown revision";
         return new CommandResult(ExitStatus.FAILURE, failMessage);
@@ -316,6 +356,8 @@ public class GitManager {
                 return res;
             }
             headInfo.moveBoth(head);
+        } else {
+            restoreCommitToIndexAndRepo(head, null);
         }
         logger.changeHeadInfo(head, branch);
         return new CommandResult(ExitStatus.SUCCESS, "Switched to branch '" + branch + "'");
@@ -357,13 +399,10 @@ public class GitManager {
 
     public CommandResult merge(String incomingHash) throws IOException, GitException {
         HeadInfo headInfo = logger.getHeadInfo();
-        if (headInfo.mergeConflictFlag()) {
-            if (logger.stillConflicting(headInfo.getConflictingFiles())) {
-                return new CommandResult(ExitStatus.FAILURE,
-                        "Unresolved conflict; fix conflicts first.");
-            }
-            logger.turnOffConflicting();
-            return commitMerge(headInfo.mergeBranch());
+        if (headInfo.merging()) {
+            return new CommandResult(ExitStatus.ERROR,
+                        "fatal: You have not concluded your merge (MERGE_HEAD exists)." + sep +
+                                "Please, commit your changes before you merge.");
         }
         if (Files.exists(git.log().resolve(incomingHash))) {
             incomingHash = logger.getHead(incomingHash);
@@ -389,16 +428,16 @@ public class GitManager {
             TreeEncoder encoder = new TreeEncoder(git.storage());
             Tree incomingTree = encoder.decode(incomingHash);
 
-            SaverVisitor visitor = new SaverVisitor(true);
+            SaverVisitor visitor = new SaverVisitor(true, incomingBranch);
             incomingTree.setRoot(git.repo());
             incomingTree.accept(visitor);
             if (visitor.conflictsAcquired()) {
                 Message message = new Message();
-                message.write("Cannot merge" + sep + "Conflicts:" + sep);
-                visitor.conflictingFiles().forEach(f -> message.write(f + sep));
+                message.write("Cannot merge" + sep + "CONFLICT (content):" + sep);
+                visitor.conflictingFiles().forEach(f -> message.write(tab + f + sep));
                 message.write("Automatic merge failed; fix conflicts and then run merge again");
 
-                logger.turnOnConflicting(visitor.conflictingFiles(), incomingBranch);
+                logger.turnOnConflictingAndMerging(visitor.conflictingFiles(), incomingBranch);
                 return new CommandResult(ExitStatus.FAILURE, message);
             }
 

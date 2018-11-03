@@ -17,14 +17,16 @@ import java.util.Set;
 public class SaverVisitor implements TreeVisitor {
 
     private boolean mergeFiles = false;
+    private String mergeBranch = "";
     private boolean conflictsAcquired = false;
     private Set<String> conflictingFiles = new HashSet<>();
 
     public SaverVisitor() {
     }
 
-    public SaverVisitor(boolean merge) {
+    public SaverVisitor(boolean merge, String mergeBranch) {
         mergeFiles = merge;
+        this.mergeBranch = mergeBranch;
     }
 
     private static void copyContent(TreeFile file, Path newFile) throws IOException {
@@ -43,22 +45,22 @@ public class SaverVisitor implements TreeVisitor {
             if (!mergeFiles) {
                 copyContent(tree, file);
             } else {
-                mergeContent(tree, content);
+                mergeContent(tree, content, mergeBranch);
                 conflictingFiles.add(tree.path());
             }
         }
 
     }
 
-    public static void mergeContent(TreeFile file, String currentContent) throws GitException {
+    public static void mergeContent(TreeFile file, String currentContent, String mergeBranch) throws GitException {
         Path newFile = file.fullPath();
         String sep = System.lineSeparator();
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFile.toFile(), false))) {
-            writer.write("<<<<<<< current content" + sep);
+            writer.write("<<<<<<< HEAD" + sep);
             writer.write(currentContent);
             writer.write(sep + "=======" + sep);
             writer.write(file.content());
-            writer.write(sep + ">>>>>>> incoming content" + sep);
+            writer.write(sep + ">>>>>>> " + mergeBranch + sep);
         } catch (IOException e) {
             throw new GitException("error while writing to " + newFile.getFileName());
         }

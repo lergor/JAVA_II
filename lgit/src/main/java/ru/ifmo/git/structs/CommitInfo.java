@@ -9,6 +9,7 @@ public class CommitInfo {
     public String message;
     public String branch;
     public String rootDirectory;
+    public String treeHash;
 
     public void setAuthor(String author) {
         this.author = author;
@@ -62,4 +63,11 @@ public class CommitInfo {
         return time;
     }
 
+    public void setTreeHash(String treeHash) {
+        this.treeHash = treeHash;
+    }
+
+    public String treeHash() {
+        return treeHash;
+    }
 }

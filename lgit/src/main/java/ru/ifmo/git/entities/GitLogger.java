@@ -29,26 +29,27 @@ public class GitLogger {
 
     private HeadInfo headInfo;
     private String currentTreeHash;
-    private HashMap<String, Set<CommitInfo>> branchToHistory = new HashMap<>();
+    private HashMap<String, List<CommitInfo>> branchToHistory = new HashMap<>();
 
     GitLogger(GitStructure structure) {
         git = structure;
     }
 
-    public CommitInfo fillCommitInfo(String message) throws GitException {
+    public CommitInfo fillCommitInfo(String message, String treeHash) throws GitException {
         CommitInfo info = new CommitInfo();
         info.setAuthor(getAuthor());
         info.setTime(getCurrentTime());
         info.setRootDirectory(git.repo().getFileName());
         info.setMessage(message == null ? getUserMessage() : message);
-        info.setHash(createCommitHash(info));
+        info.setTreeHash(treeHash);
         info.setBranch(getHeadInfo().branch());
+        info.setHash(createCommitHash(info));
         return info;
     }
 
     private static String createCommitHash(CommitInfo info) {
         String builder = info.time() + info.rootDirectory() +
-                info.author() + info.branch();
+                info.treeHash() + info.author() + info.branch();
         return DigestUtils.sha1Hex(builder);
     }
 
@@ -123,7 +124,7 @@ public class GitLogger {
         List<CommitInfo> history = new ArrayList<>();
         List<CommitInfo> previousBranchHistory = new ArrayList<>();
         if (!logFile.exists()) {
-            branchToHistory.put(branch, new HashSet<>(history));
+            branchToHistory.put(branch, new ArrayList<>(history));
             return history;
         }
         try {
@@ -140,7 +141,7 @@ public class GitLogger {
         }
         Collections.reverse(history);
         history.addAll(previousBranchHistory);
-        branchToHistory.put(branch, new HashSet<>(history));
+        branchToHistory.put(branch, new ArrayList<>(history));
         return history;
     }
 
@@ -247,25 +248,34 @@ public class GitLogger {
     }
 
     public void replaceLog(List<CommitInfo> newLog) throws GitException {
-        Path logFile = git.log().resolve(getHeadInfo().branch());
+        String branch = getHeadInfo().branch();
+        branchToHistory.put(branch, new ArrayList<>(newLog));
+        Path logFile = git.log().resolve(branch);
         Gson gson = new GsonBuilder().create();
         StringBuilder builder = new StringBuilder();
-        newLog.forEach(i -> builder.append(gson.toJson(i) + sep));
+        newLog.forEach(i -> builder.append(gson.toJson(i)).append(sep));
         writeToFile(logFile, builder.toString(), false);
     }
 
     public void turnOffConflicting() throws GitException {
         HeadInfo headInfo = getHeadInfo();
-        headInfo.mergeConflict = false;
+        headInfo.setMergeConflict(false);
         headInfo.setConflictingFiles(new HashSet<>());
+        writeHeadInfo(headInfo);
+    }
+
+    public void turnOffMerging() throws GitException {
+        HeadInfo headInfo = getHeadInfo();
+        headInfo.setMerging(false);
         headInfo.setMergeBranch("");
         writeHeadInfo(headInfo);
     }
 
-    public void turnOnConflicting(Set<String> conflictingFiles, String mergeBranch) throws GitException {
+    public void turnOnConflictingAndMerging(Set<String> conflictingFiles, String mergeBranch) throws GitException {
         HeadInfo headInfo = getHeadInfo();
-        headInfo.mergeConflict = true;
+        headInfo.setMergeConflict(true);
         headInfo.setMergeBranch(mergeBranch);
+        headInfo.setMerging(true);
         headInfo.setConflictingFiles(conflictingFiles);
         writeHeadInfo(headInfo);
     }
