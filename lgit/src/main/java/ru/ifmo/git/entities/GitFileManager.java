@@ -11,13 +11,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class GitFileManager {
 
-    private static final String METADIR = ".l_git";
+    private static final String METADIR = "l_git";
     private final Path storage;
     private static final int dirNameLen = 2;
 
@@ -34,7 +35,7 @@ public class GitFileManager {
     }
 
     public Optional<Path> findFileInStorage(String hash) throws IOException {
-        if(!hash.isEmpty()) {
+        if(!hash.isEmpty() && Files.exists(getDir(hash))) {
             List<Path> blobs;
             blobs = Files.list(getDir(hash)).collect(Collectors.toList());
             for (Path blob : blobs) {
@@ -63,9 +64,10 @@ public class GitFileManager {
         }
     }
 
-    static public boolean checkFilesExist(List<Path> files) {
+    static public boolean checkFilesExist(List<Path> files, Path directory) {
         for (Path file : files) {
-            if (!Files.exists(file)) {
+            if (!Files.exists(directory.resolve(
+                    Paths.get(".").toAbsolutePath().relativize(file.toAbsolutePath()).toAbsolutePath()))) {
                 System.out.println("fatal: pathspec " + file.getFileName() + " did not match any files");
                 return false;
             }

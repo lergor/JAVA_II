@@ -35,9 +35,6 @@ public class Add implements GitCommand {
 
     @Override
     public CommandResult doWork(GitManager gitManager) throws IOException, GitException {
-        if (!GitFileManager.checkFilesExist(files)) {
-            return new CommandResult(ExitStatus.ERROR, "add: incorrect arguments");
-        }
         return gitManager.add(files);
     }
 

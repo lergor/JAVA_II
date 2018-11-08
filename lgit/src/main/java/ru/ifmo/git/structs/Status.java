@@ -96,9 +96,6 @@ public class Status {
     private String filesToString(Set<String> files, String prefix) {
         StringBuilder builder = new StringBuilder();
         files.forEach(f -> builder.append(prefix).append(f).append(sep));
-        if (!files.isEmpty()) {
-            builder.append(sep);
-        }
         return builder.toString();
     }
 

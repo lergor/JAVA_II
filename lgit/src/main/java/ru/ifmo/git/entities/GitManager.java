@@ -72,18 +72,21 @@ public class GitManager {
         HeadInfo headInfo = logger.getHeadInfo();
         if (headInfo.merging() && headInfo.mergeConflictFlag()) {
             for (Path p: files) {
-                headInfo.getConflictingFiles().remove(git.repo().relativize(p).toString());
+                headInfo.getConflictingFiles().remove(git.repo().relativize(p.toAbsolutePath()).toString());
             }
             if(headInfo.getConflictingFiles().isEmpty()) {
                 logger().turnOffConflicting();
             }
         }
-        Tree repository = Tree.createTree(git.repo());
-        repository.setRoot(git.index());
-        repository.accept(new SaverVisitor());
 
+        for (Tree tree : Tree.createTrees(files, git.repo())) {
+            tree.setRoot(git.index());
+            tree.accept(new SaverVisitor());
+        }
+        Tree repository = Tree.createTree(git.repo());
         Tree index = Tree.createTree(git.index());
         String currentTreeHash = logger.currentTreeHash();
+
         if (currentTreeHash != null && !currentTreeHash.isEmpty()) {
             Tree lastCommit = new TreeEncoder(git.storage()).decode(currentTreeHash);
             StatusInfo statusInfo = new StatusInfo(repository, lastCommit, index);
@@ -141,7 +144,8 @@ public class GitManager {
     }
 
     public CommandResult log(String revision) throws GitException {
-        if (logger.getHeadInfo().currentHash().isEmpty()) {
+        HeadInfo headInfo = logger.getHeadInfo();
+        if (headInfo.currentHash().isEmpty()) {
             return new CommandResult(ExitStatus.SUCCESS, logger.emptyLogResult());
         }
         List<CommitInfo> history = getHistoryFromCommit(revision);
@@ -155,12 +159,15 @@ public class GitManager {
     }
 
     private List<CommitInfo> getHistoryFromCommit(String revision) throws GitException {
+        String headHash = logger.getHeadInfo().headHash;
         return logger.getHistory().stream().filter( new Predicate<CommitInfo>() {
-            private boolean include = true;
+            private boolean include = false;
 
             @Override
             public boolean test(CommitInfo commitInfo) {
-                if (commitInfo.hash.equals(revision)) {
+                if(commitInfo.hash().equals(headHash)) {
+                    include = true;
+                } else if (commitInfo.hash().equals(revision)) {
                     include = false;
                     return true;
                 }
@@ -259,7 +266,8 @@ public class GitManager {
 
     public CommandResult remove(List<Path> files) throws IOException {
         List<Path> filesInIndex = files.stream()
-                .map(f -> git.index().resolve(git.repo().relativize(f)))
+                .map(f -> git.index().resolve(
+                        git.repo().relativize(f.toAbsolutePath())).toAbsolutePath())
                 .collect(Collectors.toList());
         GitFileManager.removeAll(filesInIndex);
 
@@ -274,7 +282,11 @@ public class GitManager {
     public CommandResult status(String revision) throws GitException, IOException {
         HeadInfo headInfo = logger.getHeadInfo();
         Message message = new Message();
-        message.write("On branch " + headInfo.branch() + sep);
+        if(!headInfo.currentHash().equals(headInfo.headHash())) {
+            message.write("On commit " + headInfo.currentHash() + sep);
+        } else {
+            message.write("On branch " + headInfo.branch() + sep);
+        }
 
         if(headInfo.merging()) {
             if (headInfo.mergeConflictFlag()) {
@@ -337,9 +349,10 @@ public class GitManager {
                     "Unresolved conflict; fix conflicts first.");
         }
         HeadInfo headInfo = logger.getHeadInfo();
-        if (headInfo.branch().equals(branch)) {
+        String lastCommit = logger.getHead(branch);
+        if (headInfo.branch().equals(branch) && headInfo.currentHash().equals(lastCommit)) {
             return new CommandResult(ExitStatus.FAILURE,
-                    "Already on branch '" + branch + "'");
+                        "Already on branch '" + branch + "'");
         }
         if (Files.notExists(git.log().resolve(branch))) {
             return new CommandResult(ExitStatus.FAILURE,
@@ -401,9 +414,18 @@ public class GitManager {
     public CommandResult merge(String incomingHash) throws IOException, GitException {
         HeadInfo headInfo = logger.getHeadInfo();
         if (headInfo.merging()) {
-            return new CommandResult(ExitStatus.ERROR,
+//            if(headInfo.mergeConflictFlag()) {
+                return new CommandResult(ExitStatus.ERROR,
                         "fatal: You have not concluded your merge (MERGE_HEAD exists)." + sep +
                                 "Please, commit your changes before you merge.");
+//            } else {
+//                CommandResult res = commit(null);
+//                if(res.getStatus().equals(ExitStatus.SUCCESS)) {
+//                    return  res;
+//                } else {
+//                    return new CommandResult(ExitStatus.SUCCESS, "merge: done!");
+//                }
+//            }
         }
         if (Files.exists(git.log().resolve(incomingHash))) {
             incomingHash = logger.getHead(incomingHash);
@@ -425,7 +447,6 @@ public class GitManager {
                     return new CommandResult(ExitStatus.FAILURE, "Already up-to-date.");
                 }
             }
-
 
             TreeEncoder encoder = new TreeEncoder(git.storage());
             Tree incomingTree = encoder.decode(incomingHash);

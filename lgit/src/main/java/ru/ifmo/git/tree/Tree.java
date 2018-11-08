@@ -12,7 +12,7 @@ import java.util.List;
 
 public abstract class Tree {
 
-    protected static final String METADIR = ".l_git";
+    protected static final String METADIR = "l_git"; // and executable
     protected Path root;
     protected String path;
     private BlobType type;
