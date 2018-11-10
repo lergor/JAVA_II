@@ -167,7 +167,8 @@ public class GitManager {
             public boolean test(CommitInfo commitInfo) {
                 if(commitInfo.hash().equals(headHash)) {
                     include = true;
-                } else if (commitInfo.hash().equals(revision)) {
+                }
+                if (commitInfo.hash().equals(revision)) {
                     include = false;
                     return true;
                 }
