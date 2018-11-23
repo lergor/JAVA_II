@@ -1,5 +1,6 @@
 package ru.ifmo.git.tree.visitors;
 
+import ru.ifmo.git.tree.Tree;
 import ru.ifmo.git.tree.TreeDirectory;
 import ru.ifmo.git.tree.TreeFile;
 import ru.ifmo.git.tree.TreeVisitor;
@@ -8,6 +9,7 @@ import ru.ifmo.git.util.GitException;
 import java.io.IOException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PathAndHashCollector implements TreeVisitor {
@@ -21,8 +23,12 @@ public class PathAndHashCollector implements TreeVisitor {
 
     @Override
     public void visit(TreeDirectory tree) throws IOException, GitException {
-        paths.put(tree.path(), tree.hash());
-        visit(tree.children());
+        List<Tree> children = tree.children();
+        if (children.isEmpty()) {
+            paths.put(tree.path(), tree.hash());
+            return;
+        }
+        visit(children);
     }
 
     public Map<String, String> getPathsToHashes() {

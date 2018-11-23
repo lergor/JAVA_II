@@ -79,15 +79,13 @@ public class GitManager {
             }
         }
 
-        for (Tree tree : Tree.createTrees(files, git.repo())) {
-            tree.setRoot(git.index());
-            tree.accept(new SaverVisitor());
-        }
         Tree repository = Tree.createTree(git.repo());
-        Tree index = Tree.createTree(git.index());
-        String currentTreeHash = logger.currentTreeHash();
+        repository.setRoot(git.index());
+        repository.accept(new SaverVisitor());
 
+        String currentTreeHash = logger.currentTreeHash();
         if (currentTreeHash != null && !currentTreeHash.isEmpty()) {
+            Tree index = Tree.createTree(git.index());
             Tree lastCommit = new TreeEncoder(git.storage()).decode(currentTreeHash);
             StatusInfo statusInfo = new StatusInfo(repository, lastCommit, index);
 
@@ -271,12 +269,6 @@ public class GitManager {
                         git.repo().relativize(f.toAbsolutePath())).toAbsolutePath())
                 .collect(Collectors.toList());
         GitFileManager.removeAll(filesInIndex);
-
-//        List<Path> filesInCWD = files.stream()
-//                .map(git.repo()::resolve)
-//                .collect(Collectors.toList());
-//        GitFileManager.removeAll(filesInCWD);
-
         return new CommandResult(ExitStatus.SUCCESS, "rm: done!");
     }
 
@@ -299,13 +291,12 @@ public class GitManager {
                 message.write("All conflicts fixed but you are still merging." + sep);
             }
         }
+        Tree index = Tree.createTree(git.index());
+        Tree repo = Tree.createTree(git.repo());
 
         if ((revision == null || revision.isEmpty())) {
             String currentTreeHash = logger.currentTreeHash();
-
             if (currentTreeHash.isEmpty()) {
-                Tree index = Tree.createTree(git.index());
-                Tree repo = Tree.createTree(git.repo());
                 Status repoToIndex = new Status(repo, index);
                 if (index.isEmpty()  && repo.isEmpty() && !headInfo.mergeConflictFlag()) {
                     message.write("No commits yet");
@@ -318,10 +309,7 @@ public class GitManager {
         }
         Optional<Path> commitFile = fileManager.findFileInStorage(revision);
         if (commitFile.isPresent()) {
-            Tree index = Tree.createTree(git.index());
-            Tree repo = Tree.createTree(git.repo());
             Tree lastCommit = new TreeEncoder(git.storage()).decode(commitFile.get());
-
             StatusInfo statusInfo = new StatusInfo(repo, lastCommit, index);
             if (statusInfo.isEmpty()) {
                 message.write("No changed files");
@@ -521,5 +509,4 @@ public class GitManager {
         }
         logger.writeUsages(visitor.usages());
     }
-
 }
