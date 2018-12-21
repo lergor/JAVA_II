@@ -15,6 +15,7 @@ public class Tracker implements AutoCloseable, Runnable {
     private final ExecutorService pool = Executors.newFixedThreadPool(TrackerConfig.THREADS_COUNT);
     private final short port;
     private final TrackerState state = new TrackerState();
+    private final ServerSocket serverSocket;
 
     public Tracker(short port) throws TorrentException {
         Path metaDir = TrackerConfig.getStorage();
@@ -24,29 +25,36 @@ public class Tracker implements AutoCloseable, Runnable {
         } catch (IOException e) {
             throw new TorrentException("cannot read meta info about available files", e);
         }
+
+        try {
+            serverSocket = new ServerSocket(port);
+        } catch (IOException e) {
+            throw new TorrentException("Cannot open server socket", e);
+        }
     }
 
     @Override
     public void run() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        pool.submit(() -> {
             System.out.println("tracker started at port " + port);
 //            pool.submit(new SeedListUpdater());
 
-            while (true) {
-                Socket client = serverSocket.accept();
-                System.out.println("cleint " + client.getInetAddress() + " " + client.getPort());
-                pool.submit(new ClientHandler(client, state));
+            try {
+                while (!Thread.interrupted()) {
+                    Socket client = serverSocket.accept();
+                    pool.submit(new ClientHandler(client, state));
+                }
+            } catch (IOException ignored) { // connection is closed
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        });
     }
 
     @Override
     public void close() throws TorrentException {
         try {
-            System.out.println("CLOSE");
+            serverSocket.close();
             state.storeToFile(TrackerConfig.getStorage().resolve(TrackerConfig.getTrackerStateFile()));
+            pool.shutdown();
         } catch (IOException e) {
             throw new TorrentException("cannot write meta info about available files", e);
         }

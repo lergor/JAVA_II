@@ -26,11 +26,8 @@ public class SourcesResponse extends TrackerResponse {
     @Override
     public void write(DataOutputStream out) throws IOException {
         out.writeInt(clients.size());
-        System.out.println("clients.size() " + clients.size());
         for (SeedInfo c : clients) {
-            for (byte b : c.IP()) {
-                out.write(b);
-            }
+            out.write(c.IP());
             out.writeShort(c.port());
         }
     }
@@ -38,23 +35,27 @@ public class SourcesResponse extends TrackerResponse {
     @Override
     public void read(DataInputStream in) throws IOException {
         int count = in.readInt();
-        System.out.println("count " + count);
-
         for (int i = 0; i < count; i++) {
             byte[] IP = new byte[4];
-            for (int j = 0; j < 4; j++) {
-                IP[j] = in.readByte();
-            }
+            in.readFully(IP);
             short port = in.readShort();
             clients.add(new SeedInfo(port, IP));
         }
     }
 
     @Override
-    public void print(PrintStream printer) {
+    public void printTo(PrintStream printer) {
         printer.printf("sources count: %d%n", clients.size());
         for (SeedInfo source : clients) {
             printer.printf("\taddress: %s, port: %d%n", source.inetAddress(), source.port());
         }
+    }
+
+    public int getFileID() {
+        return fileID;
+    }
+
+    public List<SeedInfo> getClients() {
+        return clients;
     }
 }

@@ -17,7 +17,6 @@ public class ClientApp {
 
         printer.print("enter client port: ");
         Short port = getPort(args, scanner);
-        System.out.println("client " + InetAddress.getLocalHost() + " " + port);
 
         main_while:
         while (scanner.hasNext()) {
@@ -26,7 +25,7 @@ public class ClientApp {
             try (Client client = new Client(InetAddress.getLocalHost(), port)) {
                 switch (command) {
                     case Command.EXIT:
-                        System.out.println("client: shutting down");
+                        printer.println("client: shutting down");
                         break main_while;
                     case Command.LIST:
                     case Command.UPLOAD:
@@ -39,14 +38,14 @@ public class ClientApp {
                         }
                         break;
                     default:
-                        System.out.printf("client: unknown command: %s%n", command);
+                        printer.printf("client: unknown command: %s%n", command);
                         break;
                 }
 
                 if(request != null) {
                     client.sendRequest(request);
                     TrackerResponse answer = client.getResponse();
-                    answer.print(printer);
+                    answer.printTo(printer);
                 }
             }
         }
@@ -73,5 +72,6 @@ public class ClientApp {
         static final String SOURCES = "sources";
         static final String UPDATE = "update";
         static final String EXIT = "exit";
+        static final String DOWNLOAD = "download";
     }
 }

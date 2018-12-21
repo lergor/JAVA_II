@@ -28,7 +28,11 @@ public class UpdateResponse extends TrackerResponse {
     }
 
     @Override
-    public void print(PrintStream printer) {
+    public void printTo(PrintStream printer) {
+    }
+
+    public boolean getResult() {
+        return success;
     }
 
 }

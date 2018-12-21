@@ -2,7 +2,6 @@ package ru.ifmo.torrent.tracker;
 
 import ru.ifmo.torrent.messages.TorrentResponse;
 import ru.ifmo.torrent.messages.client_tracker.ClientRequest;
-import ru.ifmo.torrent.tracker.state.SeedInfo;
 import ru.ifmo.torrent.tracker.state.TrackerState;
 
 import java.io.DataInputStream;
@@ -28,16 +27,18 @@ public class ClientHandler implements Runnable {
             int marker;
             while ((marker = in.read()) != -1) {
                 ClientRequest request = ClientRequest.fromMarker((byte) marker);
-                if (request != null) {
-                    request.setTrackerEntities(trackerState, new SeedInfo((short) client.getPort(), client.getInetAddress()));
-                    request.read(in);
-                    TorrentResponse response = request.execute();
-                    response.write(out);
-                    out.flush();
-                }
+                request.setTrackerState(trackerState);
+                request.setClientInfo(clientSocket.getInetAddress());
+
+                request.read(in);
+
+                TorrentResponse response = request.execute();
+                response.write(out);
+
+                out.flush();
             }
         } catch (IOException e) {
-            throw new IllegalStateException("cannot open client socket's stream", e);
+            e.printStackTrace(System.err);
         }
     }
 

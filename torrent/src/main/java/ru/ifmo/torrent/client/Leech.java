@@ -1,4 +1,4 @@
 package ru.ifmo.torrent.client;
 
-public class Leech {
+public class Leech { // downloader
 }

@@ -1,4 +1,5 @@
 package ru.ifmo.torrent.client;
 
-public class Seed {
+public class Seed { // listens for requests
+
 }

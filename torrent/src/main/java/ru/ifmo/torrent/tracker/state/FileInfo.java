@@ -6,9 +6,9 @@ import java.io.IOException;
 
 public class FileInfo {
 
-    public int ID;
-    public String name;
-    public long size;
+    private int ID;
+    private String name;
+    private long size;
 
     public FileInfo() {
     }
@@ -39,7 +39,7 @@ public class FileInfo {
     }
 
     public void write(DataOutputStream out) throws IOException {
-        out.write(ID);
+        out.writeInt(ID);
         out.writeUTF(name);
         out.writeLong(size);
     }

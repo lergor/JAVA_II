@@ -47,4 +47,11 @@ public class UploadRequest extends ClientRequest implements TorrentMessage {
         return new UploadResponse(trackerState.addFile(fileName, fileSize));
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
+    public long getFileSize() {
+        return fileSize;
+    }
 }

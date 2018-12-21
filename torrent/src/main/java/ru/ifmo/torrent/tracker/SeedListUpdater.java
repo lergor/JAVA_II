@@ -13,7 +13,20 @@ public class SeedListUpdater implements Runnable {
     @Override
     public void run() {
         while (true) {
-
+//            try {
+//                Thread.sleep(Config.TIMEOUT);
+//            } catch (InterruptedException e) {
+//                break;
+//            }
+//            long currentTime = System.currentTimeMillis();
+//            for (Integer id: fileIDToClientInfo.keySet()) {
+//                HashSet<ClientInfo> clients = fileIDToClientInfo.get(id);
+//                for (ClientInfo clientInfo: clients) {
+//                    if (currentTime - clientInfoLastUpd.get(clientInfo) > Config.TIMEOUT) {
+//                        clients.remove(clientInfo);
+//                    }
+//                }
+//            }
         }
     }
 }

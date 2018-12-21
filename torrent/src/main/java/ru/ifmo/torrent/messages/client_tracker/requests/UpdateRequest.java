@@ -5,12 +5,18 @@ import ru.ifmo.torrent.messages.TorrentResponse;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
 import ru.ifmo.torrent.messages.client_tracker.ClientRequest;
 import ru.ifmo.torrent.messages.client_tracker.response.UpdateResponse;
+import ru.ifmo.torrent.tracker.state.FileInfo;
+import ru.ifmo.torrent.tracker.state.SeedInfo;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UpdateRequest extends ClientRequest implements TorrentMessage {
     private short clientPort;
@@ -20,9 +26,9 @@ public class UpdateRequest extends ClientRequest implements TorrentMessage {
         fileIDs = new ArrayList<>();
     }
 
-    public UpdateRequest(short clientPort, List<Integer> filesIDs) {
+    public UpdateRequest(short clientPort, List<Integer> fileIDs) {
         this.clientPort = clientPort;
-        this.fileIDs = filesIDs;
+        this.fileIDs = fileIDs;
     }
 
     @Override
@@ -52,11 +58,29 @@ public class UpdateRequest extends ClientRequest implements TorrentMessage {
 
     @Override
     public TorrentResponse execute() {
-        // FIXME - something goes wrong
-        System.out.println("update for " + client.inetAddress() + " " + clientPort);
-        for (int ID : fileIDs) {
-            trackerState.addNewSeedIfAbsent(ID, client);
+        InetAddress inetAddress = Objects.requireNonNull(this.inetAddress, "Inet address must be specified!");
+
+        System.out.println("update for " + inetAddress + " " + clientPort);
+        Set<Integer> allFiles = trackerState.getAvailableFiles().stream()
+                .map(FileInfo::fileID)
+                .collect(Collectors.toSet());
+
+        if (!allFiles.containsAll(fileIDs)) {
+            return new UpdateResponse(false);
         }
+
+        for (int ID : fileIDs) {
+            trackerState.addNewSeedIfAbsent(ID, new SeedInfo(clientPort, inetAddress));
+        }
+
         return new UpdateResponse(true);
+    }
+
+    public short getClientPort() {
+        return clientPort;
+    }
+
+    public List<Integer> getFileIDs() {
+        return fileIDs;
     }
 }

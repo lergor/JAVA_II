@@ -4,6 +4,6 @@ import java.io.PrintStream;
 
 public abstract class TorrentResponse implements TorrentMessage {
 
-    public abstract void print(PrintStream printer);
+    public abstract void printTo(PrintStream printer);
 
 }

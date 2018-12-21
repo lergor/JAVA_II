@@ -15,7 +15,6 @@ public class SeedInfo {
     public SeedInfo(short port, InetAddress inetAddress) {
         this.port = port;
         this.inetAddress = inetAddress;
-
     }
 
     public byte[] IP() {

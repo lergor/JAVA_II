@@ -28,7 +28,11 @@ public class UploadResponse extends TrackerResponse {
     }
 
     @Override
-    public void print(PrintStream printer) {
+    public void printTo(PrintStream printer) {
         printer.printf("file added with id: %d%n", fileID);
+    }
+
+    public int getFileID() {
+        return fileID;
     }
 }

@@ -10,6 +10,7 @@ import ru.ifmo.torrent.tracker.state.TrackerState;
 import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,11 +20,15 @@ import java.util.Scanner;
 public abstract class ClientRequest extends TorrentRequest {
 
     protected TrackerState trackerState;
-    protected SeedInfo client;
+    protected InetAddress inetAddress;
+//    protected SeedInfo client;
 
-    public void setTrackerEntities(TrackerState trackerState, SeedInfo seedInfo) {
-        this.client = seedInfo;
+    public void setTrackerState(TrackerState trackerState) {
         this.trackerState = trackerState;
+    }
+
+    public void setClientInfo(InetAddress inetAddress) {
+        this.inetAddress = inetAddress;
     }
 
     private static class Command {
@@ -36,11 +41,12 @@ public abstract class ClientRequest extends TorrentRequest {
 
     public static ClientRequest fromCommand(String command, Scanner scanner) throws TorrentException, IOException {
         switch (command) {
-            case Command.LIST: return new ListRequest();
+            case Command.LIST:
+                return new ListRequest();
             case Command.UPLOAD: {
                 String path = scanner.next();
                 Path file = Paths.get(path);
-                if(Files.notExists(file)) {
+                if (Files.notExists(file)) {
                     throw new TorrentException("file '" + file + "' does not exists");
                 }
                 return new UploadRequest(file);

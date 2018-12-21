@@ -10,7 +10,6 @@ public class FilePartsInfo {
         return availableParts;
     }
 
-
     public void setAvailableParts(List<Integer> l) {
         availableParts = l;
     }

@@ -45,10 +45,14 @@ public class ListResponse extends TrackerResponse {
     }
 
     @Override
-    public void print(PrintStream printer) {
+    public void printTo(PrintStream printer) {
         printer.printf("files count: %d%n", files.size());
         for (FileInfo f : files) {
             printer.printf("\t%s\tid: %d, size: %d bytes%n", f.name(), f.fileID(), f.size());
         }
+    }
+
+    public List<FileInfo> getFiles() {
+        return files;
     }
 }

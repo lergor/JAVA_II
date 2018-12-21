@@ -44,7 +44,7 @@ public class StatResponse extends ClientResponse {
 
 
     @Override
-    public void print(PrintStream printer) {
+    public void printTo(PrintStream printer) {
         printer.printf("parts count: %d%n", filePartsInfo.availableParts().size());
         for (Integer i: filePartsInfo.availableParts()) {
             printer.println(i);

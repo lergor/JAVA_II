@@ -17,7 +17,7 @@ public class GetResponse extends ClientResponse {
     }
 
     @Override
-    public void print(PrintStream printer) {
+    public void printTo(PrintStream printer) {
 
     }
 

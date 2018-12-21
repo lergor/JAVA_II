@@ -35,7 +35,7 @@ public class TrackerState implements StoredState {
     }
 
     public synchronized void addNewSeedIfAbsent(int fileID, SeedInfo source) {
-        IDToSources.get(fileID).add(source);
+        IDToSources.computeIfAbsent(fileID, id -> new HashSet<>()).add(source);
     }
 
     public synchronized List<SeedInfo> getSources(int fileId) {
@@ -52,6 +52,7 @@ public class TrackerState implements StoredState {
             for (FileInfo info : IDToInfo.values()) {
                 info.write(out);
             }
+            out.flush();
         }
     }
 

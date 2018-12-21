@@ -33,12 +33,17 @@ public class SourcesRequest extends ClientRequest implements TorrentMessage {
     @Override
     public void read(DataInputStream in) throws IOException {
         fileID = in.readInt();
+
     }
 
     @Override
     public TorrentResponse execute() {
-        System.out.println("sources exec " + fileID);
+        System.out.println("sources exec " + fileID + " answ " + trackerState.getSources(fileID));
         // FIXME if list is empty - get error
         return new SourcesResponse(fileID, trackerState.getSources(fileID));
+    }
+
+    public int fileID() {
+        return fileID;
     }
 }
