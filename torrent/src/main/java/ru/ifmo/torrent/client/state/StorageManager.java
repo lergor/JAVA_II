@@ -12,12 +12,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FileManager {
+public class StorageManager {
 
     private final Path storage;
 
-    public FileManager(Path storage) {
+    public StorageManager(Path storage) {
         this.storage = storage;
+        if (Files.notExists(storage)) {
+            storage.toFile().mkdirs();
+        }
     }
 
     public void storeSplitted(int fileId, Path targetFile) throws IOException {
@@ -64,8 +67,8 @@ public class FileManager {
         return Files.newInputStream(partFile);
     }
 
-//    private boolean partFileExists(int fileId, int part) {
-//        Path partFile = storage.resolve(String.valueOf(fileId)).resolve(String.valueOf(part));
-//    }
+    public boolean fileIsPresent(int fileId) {
+        return Files.exists(storage.resolve(String.valueOf(fileId)));
+    }
 
 }

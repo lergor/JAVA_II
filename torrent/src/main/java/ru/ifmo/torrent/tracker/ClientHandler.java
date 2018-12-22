@@ -1,19 +1,26 @@
 package ru.ifmo.torrent.tracker;
 
-import ru.ifmo.torrent.messages.TorrentResponse;
-import ru.ifmo.torrent.messages.client_tracker.ClientRequest;
+import ru.ifmo.torrent.messages.client_tracker.Marker;
+import ru.ifmo.torrent.messages.client_tracker.requests.*;
+import ru.ifmo.torrent.messages.client_tracker.response.*;
+import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.tracker.state.FileInfo;
+import ru.ifmo.torrent.tracker.state.SeedInfo;
 import ru.ifmo.torrent.tracker.state.TrackerState;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ClientHandler implements Runnable {
     private final Socket client;
     private final TrackerState trackerState;
 
-    public ClientHandler(Socket client, TrackerState trackerState) {
+    ClientHandler(Socket client, TrackerState trackerState) {
         this.client = client;
         this.trackerState = trackerState;
     }
@@ -24,55 +31,55 @@ public class ClientHandler implements Runnable {
             DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
             DataInputStream in = new DataInputStream(clientSocket.getInputStream());
 
+            Response response = null;
             int marker;
             while ((marker = in.read()) != -1) {
-                ClientRequest request = ClientRequest.fromMarker((byte) marker);
-                request.setTrackerState(trackerState);
-                request.setClientInfo(clientSocket.getInetAddress());
-
-                request.read(in);
-
-                TorrentResponse response = request.execute();
-                response.write(out);
-
-                out.flush();
+                switch (marker) {
+                    case Marker.LIST:
+                        response = new ListResponse(trackerState.getAvailableFiles());
+                        break;
+                    case Marker.SOURCES: {
+                        SourcesRequest request = SourcesRequest.readFromDataInputStream(in);
+                        int fileId = request.getFileId();
+                        response = new SourcesResponse(fileId, trackerState.getSources(fileId));
+                        break;
+                    }
+                    case Marker.UPDATE: {
+                        UpdateRequest request = UpdateRequest.readFromDataInputStream(in);
+                        SeedInfo newSeed = new SeedInfo(request.getClientPort(), clientSocket.getInetAddress());
+                        boolean success = update(request.getFileIds(), newSeed);
+                        response =  new UpdateResponse(success);
+                        break;
+                    }
+                    case Marker.UPLOAD: {
+                        UploadRequest request = UploadRequest.readFromDataInputStream(in);
+                        int fileId = trackerState.addFile(request.getFileName(), request.getFileSize());
+                        response = new UploadResponse(fileId);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                if(response != null) {
+                    response.write(out);
+                    out.flush();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace(System.err);
         }
     }
 
-//    private void list(ObjectOutputStream out) throws IOException {
-//        writeObject(out, new ListResponse(new ArrayList<>(fileIdToFileInfo.values())));
-//    }
-//
-//    private void upload(UploadRequest request, ObjectOutputStream out) throws IOException {
-//        Integer fileId = lastFileId.getAndIncrement();
-//        fileIdToFileInfo.put(fileId, new FileInfo(fileId, request.getName(), request.getSize()));
-//        fileIdToClientInfo.put(fileId, new HashSet<>());
-//        writeObject(out, new UploadResponse(fileId));
-//    }
-//
-//    private void sources(SourcesRequest request, ObjectOutputStream out) throws IOException {
-//        long curTime = System.currentTimeMillis();
-//        List<ClientInfo> clientInfos = fileIdToClientInfo.get(request.getFileId())
-//                .stream()
-//                .filter(clientInfo -> isOnline(clientInfoLastUpd.get(clientInfo), curTime))
-//                .collect(Collectors.toList());
-//        writeObject(out, new SourcesResponse(clientInfos));
-//    }
-//
-//    private void update(UpdateRequest request, ObjectOutputStream out) throws IOException {
-//        ClientInfo clientInfo = new ClientInfo(client.getInetAddress().getAddress(),
-//                request.getClientDataInfo().getClientPort());
-//        clientInfoLastUpd.put(clientInfo, System.currentTimeMillis());
-//        boolean result = request.getClientDataInfo().getFilesId().stream().allMatch(id -> {
-//            if (fileIdToFileInfo.containsKey(id)) {
-//                fileIdToClientInfo.get(id).add(clientInfo);
-//                return true;
-//            }
-//            return false;
-//        });
-//        writeObject(out, new UpdateResponse(result));
-//    }
+    private boolean update(List<Integer> fileIds, SeedInfo newSeed) {
+        Set<Integer> allFiles = trackerState.getAvailableFiles().stream()
+            .map(FileInfo::fileId)
+            .collect(Collectors.toSet());
+        if (!allFiles.containsAll(fileIds)) {
+            return false;
+        }
+        for (int ID : fileIds) {
+            trackerState.addNewSeedIfAbsent(ID, newSeed);
+        }
+        return true;
+    }
 }

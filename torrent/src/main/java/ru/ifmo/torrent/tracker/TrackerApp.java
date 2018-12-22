@@ -10,8 +10,8 @@ public class TrackerApp {
         Scanner scanner = new Scanner(System.in);
 
         try (Tracker tracker = new Tracker(TrackerConfig.TRACKER_PORT)) {
-            System.out.println("enter 'stop' to stop tracker");
             tracker.run();
+            System.out.println("enter 'stop' to stop tracker");
             while (scanner.hasNext()) {
                 String command = scanner.next();
                 if (command.equals("stop")) {

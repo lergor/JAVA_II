@@ -1,13 +1,15 @@
 package ru.ifmo.torrent.messages.seed_peer.requests;
 
-import ru.ifmo.torrent.messages.TorrentResponse;
-import ru.ifmo.torrent.messages.seed_peer.ClientRequest;
+import ru.ifmo.torrent.messages.seed_peer.Marker;
+import ru.ifmo.torrent.messages.seed_peer.response.GetResponse;
+import ru.ifmo.torrent.network.Request;
+import ru.ifmo.torrent.network.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class GetRequest extends ClientRequest {
+public class GetRequest extends Request {
 
     private int fileID;
     private int part;
@@ -26,8 +28,13 @@ public class GetRequest extends ClientRequest {
     }
 
     @Override
+    public Response getEmptyResponse() {
+        return new GetResponse();
+    }
+
+    @Override
     public void write(DataOutputStream out) throws IOException {
-        out.writeInt(marker());
+        out.writeByte(marker());
         out.writeInt(fileID);
         out.writeInt(part);
     }
@@ -38,9 +45,11 @@ public class GetRequest extends ClientRequest {
         part = in.readInt();
     }
 
-    @Override
-    public TorrentResponse execute() {
-        return null;
+    public int getFileID() {
+        return fileID;
     }
 
+    public int getPart() {
+        return part;
+    }
 }

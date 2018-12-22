@@ -1,7 +1,6 @@
 package ru.ifmo.torrent.messages.seed_peer.response;
 
-import ru.ifmo.torrent.messages.seed_peer.ClientResponse;
-import ru.ifmo.torrent.util.FilePartsInfo;
+import ru.ifmo.torrent.network.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,22 +9,18 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StatResponse extends ClientResponse {
+public class StatResponse extends Response {
 
-    private FilePartsInfo filePartsInfo;
-    // Формат ответа: <count: Int> (<part: Int>)*, count — количество доступных частей part — номер части
+    private List<Integer> availableParts;
 
-    public StatResponse() {
-        filePartsInfo = new FilePartsInfo();
-    }
+    public StatResponse() {}
 
-    public StatResponse(FilePartsInfo filePartsInfo) {
-        this.filePartsInfo = filePartsInfo;
+    public StatResponse(List<Integer> availableParts) {
+        this.availableParts = availableParts;
     }
 
     @Override
     public void write(DataOutputStream out) throws IOException {
-        List<Integer> availableParts = filePartsInfo.availableParts();
         out.writeInt(availableParts.size());
         for (Integer i: availableParts) {
             out.writeInt(i);
@@ -34,20 +29,22 @@ public class StatResponse extends ClientResponse {
 
     @Override
     public void read(DataInputStream in) throws IOException {
-        List<Integer> parts = new ArrayList<>();
+        availableParts = new ArrayList<>();
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
-            parts.add(in.readInt());
+            availableParts.add(in.readInt());
         }
-        filePartsInfo.setAvailableParts(parts);
     }
 
+//    @Override
+//    public void printTo(PrintStream printer) {
+//        printer.printf("parts count: %d%n", availableParts.size());
+//        for (Integer i: availableParts) {
+//            printer.println(i);
+//        }
+//    }
 
-    @Override
-    public void printTo(PrintStream printer) {
-        printer.printf("parts count: %d%n", filePartsInfo.availableParts().size());
-        for (Integer i: filePartsInfo.availableParts()) {
-            printer.println(i);
-        }
+    public List<Integer> getAvailableParts() {
+        return availableParts;
     }
 }

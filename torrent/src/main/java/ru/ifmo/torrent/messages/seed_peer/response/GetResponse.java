@@ -1,33 +1,38 @@
 package ru.ifmo.torrent.messages.seed_peer.response;
 
-import ru.ifmo.torrent.messages.seed_peer.ClientResponse;
+import ru.ifmo.torrent.client.ClientConfig;
+import ru.ifmo.torrent.network.Response;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.Path;
+import java.io.*;
 
-public class GetResponse extends ClientResponse {
+public class GetResponse extends Response {
 
-    private Path file;
+    private byte[] content;
 
-    public GetResponse(Path file) {
-        this.file = file;
+    public GetResponse() {}
+
+    public GetResponse(OutputStream out) throws IOException {
+        this.content = new byte[ClientConfig.FILE_PART_SIZE];
+        out.write(content);
+        out.flush();
     }
 
-    @Override
-    public void printTo(PrintStream printer) {
-
+    public GetResponse(byte[] content) {
+        this.content = content;
     }
 
     @Override
     public void write(DataOutputStream out) throws IOException {
-
+        out.write(content);
     }
 
     @Override
     public void read(DataInputStream in) throws IOException {
+        content = new byte[ClientConfig.FILE_PART_SIZE];
+        in.read(content);
+    }
 
+    public byte[] getContent() {
+        return content;
     }
 }

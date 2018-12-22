@@ -6,21 +6,21 @@ import java.io.IOException;
 
 public class FileInfo {
 
-    private int ID;
+    private int id;
     private String name;
     private long size;
 
     public FileInfo() {
     }
 
-    public FileInfo(int ID, String name, long size) {
-        this.ID = ID;
+    public FileInfo(int id, String name, long size) {
+        this.id = id;
         this.name = name;
         this.size = size;
     }
 
-    public int fileID() {
-        return ID;
+    public int fileId() {
+        return id;
     }
 
     public long size() {
@@ -31,7 +31,7 @@ public class FileInfo {
         return name;
     }
 
-    public static FileInfo readFileInfo(DataInputStream in) throws IOException {
+    public static FileInfo readFrom(DataInputStream in) throws IOException {
         int ID = in.readInt();
         String name = in.readUTF();
         long size = in.readLong();
@@ -39,7 +39,7 @@ public class FileInfo {
     }
 
     public void write(DataOutputStream out) throws IOException {
-        out.writeInt(ID);
+        out.writeInt(id);
         out.writeUTF(name);
         out.writeLong(size);
     }

@@ -1,10 +1,9 @@
 package ru.ifmo.torrent.messages.client_tracker.requests;
 
-import ru.ifmo.torrent.messages.TorrentMessage;
-import ru.ifmo.torrent.messages.TorrentResponse;
+import ru.ifmo.torrent.network.Request;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
-import ru.ifmo.torrent.messages.client_tracker.ClientRequest;
 import ru.ifmo.torrent.messages.client_tracker.response.UploadResponse;
+import ru.ifmo.torrent.network.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -12,20 +11,31 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class UploadRequest extends ClientRequest implements TorrentMessage {
+public class UploadRequest extends Request {
     private String fileName;
     private long fileSize;
 
-    public UploadRequest() {}
+    public UploadRequest() {
+    }
+
+    public UploadRequest(String fileName, long fileSize) {
+        this.fileName = fileName;
+        this.fileSize = fileSize;
+    }
 
     public UploadRequest(Path file) throws IOException {
-        fileName = file.getFileName().toString();
-        fileSize = Files.size(file);
+        this.fileName = file.getFileName().toString();
+        this.fileSize = Files.size(file);
     }
 
     @Override
     public byte marker() {
         return Marker.UPLOAD;
+    }
+
+    @Override
+    public Response getEmptyResponse() {
+        return new UploadResponse();
     }
 
     @Override
@@ -41,17 +51,17 @@ public class UploadRequest extends ClientRequest implements TorrentMessage {
         fileSize = in.readLong();
     }
 
-    @Override
-    public TorrentResponse execute() {
-//        System.out.println("doing upload " + fileName + " from "+ client.inetAddress() + " " + client.port());
-        return new UploadResponse(trackerState.addFile(fileName, fileSize));
-    }
-
     public String getFileName() {
         return fileName;
     }
 
     public long getFileSize() {
         return fileSize;
+    }
+
+    public static UploadRequest readFromDataInputStream(DataInputStream in) throws IOException {
+        UploadRequest request = new UploadRequest();
+        request.read(in);
+        return request;
     }
 }

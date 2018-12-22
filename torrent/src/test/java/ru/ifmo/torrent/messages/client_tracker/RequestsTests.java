@@ -4,6 +4,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.ifmo.torrent.messages.client_tracker.requests.*;
+import ru.ifmo.torrent.network.Request;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -38,7 +39,7 @@ public class RequestsTests {
         DataInputStream in = testSendAndAccept(sentRequest, Marker.SOURCES);
 
         acceptedRequest.read(in);
-        assertThat(sentRequest.fileID()).isEqualTo(acceptedRequest.fileID());
+        assertThat(sentRequest.getFileId()).isEqualTo(acceptedRequest.getFileId());
     }
 
     @Test
@@ -50,9 +51,9 @@ public class RequestsTests {
         DataInputStream in = testSendAndAccept(sentRequest, Marker.UPDATE);
         acceptedRequest.read(in);
         assertThat(acceptedRequest.getClientPort()).isEqualTo(sentRequest.getClientPort());
-        assertThat(acceptedRequest.getFileIDs().size()).isEqualTo(sentRequest.getFileIDs().size());
-        for (int i = 0; i < acceptedRequest.getFileIDs().size(); i++) {
-            assertThat(acceptedRequest.getFileIDs().get(i)).isEqualTo(sentRequest.getFileIDs().get(i));
+        assertThat(acceptedRequest.getFileIds().size()).isEqualTo(sentRequest.getFileIds().size());
+        for (int i = 0; i < acceptedRequest.getFileIds().size(); i++) {
+            assertThat(acceptedRequest.getFileIds().get(i)).isEqualTo(sentRequest.getFileIds().get(i));
         }
     }
 
@@ -69,7 +70,7 @@ public class RequestsTests {
         assertThat(acceptedRequest.getFileSize()).isEqualTo(sentRequest.getFileSize());
     }
 
-    private DataInputStream testSendAndAccept(ClientRequest request, byte marker) throws IOException, IllegalAccessException, InstantiationException {
+    private DataInputStream testSendAndAccept(Request request, byte marker) throws IOException, IllegalAccessException, InstantiationException {
         request.write(out);
         out.flush();
 

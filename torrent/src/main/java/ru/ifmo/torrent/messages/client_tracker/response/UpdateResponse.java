@@ -1,13 +1,12 @@
 package ru.ifmo.torrent.messages.client_tracker.response;
 
-import ru.ifmo.torrent.messages.client_tracker.TrackerResponse;
+import ru.ifmo.torrent.network.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 
-public class UpdateResponse extends TrackerResponse {
+public class UpdateResponse extends Response {
     private boolean success;
 
     public UpdateResponse() {
@@ -25,10 +24,6 @@ public class UpdateResponse extends TrackerResponse {
     @Override
     public void read(DataInputStream in) throws IOException {
         success = in.readBoolean();
-    }
-
-    @Override
-    public void printTo(PrintStream printer) {
     }
 
     public boolean getResult() {

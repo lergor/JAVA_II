@@ -11,24 +11,30 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+public class LocalFilesManager implements StoredState {
 
-public class ClientState implements StoredState {
+    private ConcurrentHashMap<Integer, LocalFileReference> localFiles = new ConcurrentHashMap<>();
+    private final Path metaFile;
 
-    private ConcurrentHashMap<Integer, LocalFileState> localFiles = new ConcurrentHashMap<>();
-
-    public ClientState() {
+    public LocalFilesManager(Path metadir) throws IOException {
+        metaFile = metadir.resolve("client_state_file");
+        if (Files.notExists(metaFile)) {
+            metaFile.getParent().toFile().mkdirs();
+            Files.createFile(metaFile);
+            return;
+        }
     }
 
-    public void addLocalFile(int fileId, long size) throws IOException {
+    public void addLocalFile(String name, int fileId, long size) {
         int partsNum = getPartsNumber(size);
-        if (localFiles.putIfAbsent(fileId, LocalFileState.createFull(fileId, partsNum)) != null) {
+        if (localFiles.putIfAbsent(fileId, LocalFileReference.createFull(name, fileId, partsNum)) != null) {
             throw new IllegalArgumentException("file with id " + fileId + " already added");
         }
     }
 
-    public void addNotDownloadedFile(int fileId, long size) throws IOException {
+    public void addNotDownloadedFile(String name, int fileId, long size) throws IOException {
         int partsNum = getPartsNumber(size);
-        if (localFiles.putIfAbsent(fileId, LocalFileState.createEmpty(fileId, partsNum)) != null) {
+        if (localFiles.putIfAbsent(fileId, LocalFileReference.createEmpty(name, fileId, partsNum)) != null) {
             throw new IllegalArgumentException("file with id " + fileId + " already added");
         }
     }
@@ -41,18 +47,18 @@ public class ClientState implements StoredState {
         getOrThrow(fileId).addReadyPart(part);
     }
 
-    private LocalFileState getOrThrow(int fileId) {
+    private LocalFileReference getOrThrow(int fileId) {
         return Objects.requireNonNull(
             localFiles.get(fileId),
             "No file with id " + fileId
         );
     }
 
-    public LocalFileState getFileState(int fileId) {
+    public LocalFileReference getFileState(int fileId) {
         return getOrThrow(fileId);
     }
 
-    public List<LocalFileState> getFiles() {
+    public List<LocalFileReference> getFiles() {
         return new ArrayList<>(localFiles.values());
     }
 
@@ -61,13 +67,10 @@ public class ClientState implements StoredState {
     }
 
     @Override
-    public void storeToFile(Path metaFile) throws IOException {
-        if (Files.notExists(metaFile)) {
-            Files.createFile(metaFile);
-        }
+    public void storeToFile() throws IOException {
         try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(metaFile))) {
             out.writeInt(localFiles.size());
-            for (LocalFileState file : localFiles.values()) {
+            for (LocalFileReference file : localFiles.values()) {
                 file.write(out);
             }
             out.flush();
@@ -75,16 +78,12 @@ public class ClientState implements StoredState {
     }
 
     @Override
-    public void restoreFromFile(Path metaFile) throws IOException {
-        if (Files.notExists(metaFile)) {
-            Files.createFile(metaFile);
-            return;
-        }
+    public void restoreFromFile() throws IOException {
         try (DataInputStream in = new DataInputStream(Files.newInputStream(metaFile))) {
             int numOfLOcalFiles = in.readInt();
             localFiles = new ConcurrentHashMap<>();
             for (int i = 0; i < numOfLOcalFiles; i++) {
-                LocalFileState file = LocalFileState.readFrom(in);
+                LocalFileReference file = LocalFileReference.readFrom(in);
                 localFiles.put(file.getFileId(), file);
             }
         }

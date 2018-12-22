@@ -18,7 +18,7 @@ public class TrackerConfig extends Config {
     private TrackerConfig() {
     }
 
-    public static Path getStorage() {
+    public static Path getMetaDir() {
         Path storage = TRACKER_STORAGE;
         if(Files.notExists(storage)) {
             storage.toFile().mkdirs();
@@ -27,7 +27,7 @@ public class TrackerConfig extends Config {
     }
 
     public static Path getTrackerStateFile() {
-        Path storage = getStorage();
+        Path storage = getMetaDir();
         return storage.resolve(TRACKER_STATE_FILE);
     }
 }

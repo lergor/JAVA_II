@@ -16,8 +16,12 @@ public class TrackerState implements StoredState {
 
     private final ConcurrentHashMap<Integer, FileInfo> IDToInfo = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, HashSet<SeedInfo>> IDToSources = new ConcurrentHashMap<>();
+    private final Path metaFile;
 
-    public TrackerState() {}
+    public TrackerState(Path metaFile) throws IOException {
+        this.metaFile = metaFile;
+        restoreFromFile();
+    }
 
     public synchronized int addFile(String name, long size) {
         int ID = generateID();
@@ -43,7 +47,7 @@ public class TrackerState implements StoredState {
     }
 
     @Override
-    public synchronized void storeToFile(Path metaFile) throws IOException {
+    public synchronized void storeToFile() throws IOException {
         if (Files.notExists(metaFile)) {
             Files.createFile(metaFile);
         }
@@ -57,7 +61,7 @@ public class TrackerState implements StoredState {
     }
 
     @Override
-    public void restoreFromFile(Path metaFile) throws IOException {
+    public void restoreFromFile() throws IOException {
         if (Files.notExists(metaFile)) {
             Files.createFile(metaFile);
             return;
@@ -66,8 +70,8 @@ public class TrackerState implements StoredState {
         try (DataInputStream in = new DataInputStream(Files.newInputStream(metaFile))) {
             int filesNumber = in.readInt();
             for (int i = 0; i < filesNumber; ++i) {
-                FileInfo fileInfo = FileInfo.readFileInfo(in);
-                IDToInfo.put(fileInfo.fileID(), fileInfo);
+                FileInfo fileInfo = FileInfo.readFrom(in);
+                IDToInfo.put(fileInfo.fileId(), fileInfo);
             }
         }
     }

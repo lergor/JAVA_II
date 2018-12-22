@@ -1,25 +1,24 @@
 package ru.ifmo.torrent.messages.client_tracker.response;
 
-import ru.ifmo.torrent.messages.client_tracker.TrackerResponse;
+import ru.ifmo.torrent.network.Response;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SourcesResponse extends TrackerResponse {
-    private int fileID;
+public class SourcesResponse extends Response {
+    private int fileId;
     private List<SeedInfo> clients;
 
     public SourcesResponse() {
         clients = new ArrayList<>();
     }
 
-    public SourcesResponse(int fileID, List<SeedInfo> clients) {
-        this.fileID = fileID;
+    public SourcesResponse(int fileId, List<SeedInfo> clients) {
+        this.fileId = fileId;
         this.clients = clients;
     }
 
@@ -43,19 +42,23 @@ public class SourcesResponse extends TrackerResponse {
         }
     }
 
-    @Override
-    public void printTo(PrintStream printer) {
-        printer.printf("sources count: %d%n", clients.size());
-        for (SeedInfo source : clients) {
-            printer.printf("\taddress: %s, port: %d%n", source.inetAddress(), source.port());
-        }
-    }
+//    @Override
+//    public void printTo(PrintStream printer) {
+//        printer.printf("sources count: %d%n", clients.size());
+//        for (SeedInfo source : clients) {
+//            printer.printf("\taddress: %s, port: %d%n", source.inetAddress(), source.port());
+//        }
+//    }
 
-    public int getFileID() {
-        return fileID;
+    public int getFileId() {
+        return fileId;
     }
 
     public List<SeedInfo> getClients() {
         return clients;
+    }
+
+    public void setFileId(int fileId) {
+        this.fileId = fileId;
     }
 }

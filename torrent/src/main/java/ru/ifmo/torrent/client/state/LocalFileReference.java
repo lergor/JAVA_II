@@ -10,28 +10,30 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class LocalFileState {
+public class LocalFileReference {
     private final int fileId;
     private final int numberOfParts;
     private final Set<Integer> readyParts;
+    private final String name;
 
-    private LocalFileState(int fileId, int numberOfParts, Set<Integer> readyParts) {
+    private LocalFileReference(String name, int fileId, int numberOfParts, Set<Integer> readyParts) {
         this.fileId = fileId;
+        this.name = name;
         this.numberOfParts = numberOfParts;
         this.readyParts = readyParts;
     }
 
-    public static LocalFileState createEmpty(int fileId, int numberOfParts) {
-        return new LocalFileState(fileId, numberOfParts, new HashSet<>());
+    public static LocalFileReference createEmpty(String name, int fileId, int numberOfParts) {
+        return new LocalFileReference(name, fileId, numberOfParts, new HashSet<>());
     }
 
-    public static LocalFileState createFull(int fileId, int numberOfParts) {
+    public static LocalFileReference createFull(String name, int fileId, int numberOfParts) {
         Set<Integer> readyParts = IntStream.range(0, numberOfParts - 1).boxed().collect(Collectors.toSet());
-        return new LocalFileState(fileId, numberOfParts, readyParts);
+        return new LocalFileReference(name, fileId, numberOfParts, readyParts);
     }
 
-    public static LocalFileState createPartly(int fileId, int numberOfParts, Set<Integer> readyParts) {
-        return new LocalFileState(fileId, numberOfParts, readyParts);
+    public static LocalFileReference createPartly(String name, int fileId, int numberOfParts, Set<Integer> readyParts) {
+        return new LocalFileReference(name, fileId, numberOfParts, readyParts);
     }
 
     public int getFileId() {
@@ -46,14 +48,19 @@ public class LocalFileState {
         return new ArrayList<>(readyParts);
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void addReadyPart(int part) {
         if (part < numberOfParts) {
             readyParts.add(part);
         }
     }
 
-    public static LocalFileState readFrom(DataInputStream in) throws IOException {
-        int Id = in.readInt();
+    public static LocalFileReference readFrom(DataInputStream in) throws IOException {
+        int id = in.readInt();
+        String name = in.readUTF();
         int numOfParts = in.readInt();
         int numOfReadyParts = in.readInt();
         Set<Integer> readyParts = new HashSet<>();
@@ -61,11 +68,12 @@ public class LocalFileState {
             int part = in.readInt();
             readyParts.add(part);
         }
-        return new LocalFileState(Id, numOfParts, readyParts);
+        return new LocalFileReference(name, id, numOfParts, readyParts);
     }
 
     public void write(DataOutputStream out) throws IOException {
         out.writeInt(fileId);
+        out.writeUTF(name);
         out.writeInt(numberOfParts);
         out.writeInt(readyParts.size());
         for (Integer part : readyParts) {

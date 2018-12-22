@@ -1,10 +1,10 @@
-package ru.ifmo.torrent.messages;
+package ru.ifmo.torrent.network;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public interface TorrentMessage {
+public interface NetworkMessage {
 
     void write(DataOutputStream out) throws IOException;
 

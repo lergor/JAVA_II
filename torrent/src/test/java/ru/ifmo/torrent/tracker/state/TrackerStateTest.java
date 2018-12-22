@@ -16,9 +16,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class TrackerStateTest {
 
     private final List<FileInfo> files = Arrays.asList(
-            new FileInfo(0, "file_1", 1),
-            new FileInfo(1, "file_2", 100),
-            new FileInfo(2, "file_3", 17)
+        new FileInfo(0, "file_1", 1),
+        new FileInfo(1, "file_2", 100),
+        new FileInfo(2, "file_3", 17)
     );
 
     @Rule
@@ -30,33 +30,34 @@ public class TrackerStateTest {
 
     @Test
     public void testStoringAndRestoringState() throws IOException {
-        TrackerState storedState = new TrackerState();
-        files.forEach(f -> storedState.addFile(f.name(), f.size()));
         Path file = createMetaFile();
-        storedState.storeToFile(file);
+        TrackerState storedState = new TrackerState(file);
+        files.forEach(f -> storedState.addFile(f.name(), f.size()));
+        storedState.storeToFile();
 
-        TrackerState restoredState = new TrackerState();
-        restoredState.restoreFromFile(file);
+        TrackerState restoredState = new TrackerState(file);
+        restoredState.restoreFromFile();
         List<FileInfo> restoredFiles = restoredState.getAvailableFiles();
 
         assertThat(files.size()).isEqualTo(restoredFiles.size());
         for (int i = 0; i < files.size(); i++) {
-            assertThat(restoredFiles.get(i).fileID()).isEqualTo(files.get(i).fileID());
+            assertThat(restoredFiles.get(i).fileId()).isEqualTo(files.get(i).fileId());
             assertThat(restoredFiles.get(i).name()).isEqualTo(files.get(i).name());
             assertThat(restoredFiles.get(i).size()).isEqualTo(files.get(i).size());
         }
     }
 
     @Test
-    public void addAndContainsFileTest() {
-        TrackerState state = new TrackerState();
+    public void addAndContainsFileTest() throws IOException {
+        Path file = createMetaFile();
+        TrackerState state = new TrackerState(file);
         assertTrue(state.getAvailableFiles().isEmpty());
         String fileName = "kek";
         long fileSize = 17;
         int ID = state.addFile(fileName, fileSize);
         assertThat(state.getAvailableFiles().size()).isEqualTo(1);
         FileInfo addedFile = state.getAvailableFiles().get(0);
-        assertThat(addedFile.fileID()).isEqualTo(ID);
+        assertThat(addedFile.fileId()).isEqualTo(ID);
         assertThat(addedFile.name()).isEqualTo(fileName);
         assertThat(addedFile.size()).isEqualTo(fileSize);
     }

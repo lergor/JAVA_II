@@ -2,6 +2,7 @@ package ru.ifmo.torrent.messages.client_tracker;
 
 import org.junit.Test;
 import ru.ifmo.torrent.messages.client_tracker.response.*;
+import ru.ifmo.torrent.network.Response;
 import ru.ifmo.torrent.tracker.state.FileInfo;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
 
@@ -32,7 +33,7 @@ public class ResponseTests {
         assertThat(acceptedResponse.getFiles().size()).isEqualTo(files.size());
         for (int i = 0; i < files.size(); i++) {
             FileInfo f = acceptedResponse.getFiles().get(i);
-            assertThat(f.fileID()).isEqualTo(files.get(i).fileID());
+            assertThat(f.fileId()).isEqualTo(files.get(i).fileId());
             assertThat(f.name()).isEqualTo(files.get(i).name());
             assertThat(f.size()).isEqualTo(files.get(i).size());
         }
@@ -49,7 +50,7 @@ public class ResponseTests {
         SourcesResponse acceptedResponse = new SourcesResponse();
         sendAndAccept(sentResponse, acceptedResponse);
 
-        assertThat(acceptedResponse.getFileID()).isEqualTo(sentResponse.getFileID());
+        assertThat(acceptedResponse.getFileId()).isEqualTo(sentResponse.getFileId());
         assertThat(acceptedResponse.getClients().size()).isEqualTo(seeds.size());
         for (int i = 0; i < seeds.size(); i++) {
             SeedInfo s = acceptedResponse.getClients().get(i);
@@ -78,7 +79,7 @@ public class ResponseTests {
         assertThat(acceptedResponse.getFileID()).isEqualTo(sentResponse.getFileID());
     }
 
-    private void sendAndAccept(TrackerResponse sentResponse, TrackerResponse acceptedResponse) throws IOException {
+    private void sendAndAccept(Response sentResponse, Response acceptedResponse) throws IOException {
         sentResponse.write(out);
         out.flush();
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(baos.toByteArray()));

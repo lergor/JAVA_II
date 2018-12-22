@@ -1,13 +1,12 @@
 package ru.ifmo.torrent.messages.client_tracker.response;
 
-import ru.ifmo.torrent.messages.client_tracker.TrackerResponse;
+import ru.ifmo.torrent.network.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 
-public class UploadResponse extends TrackerResponse {
+public class UploadResponse extends Response {
     private int fileID;
 
     public UploadResponse() {
@@ -25,11 +24,6 @@ public class UploadResponse extends TrackerResponse {
     @Override
     public void read(DataInputStream in) throws IOException {
         fileID = in.readInt();
-    }
-
-    @Override
-    public void printTo(PrintStream printer) {
-        printer.printf("file added with id: %d%n", fileID);
     }
 
     public int getFileID() {

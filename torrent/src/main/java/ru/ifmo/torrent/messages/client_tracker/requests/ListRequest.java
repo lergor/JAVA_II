@@ -1,19 +1,28 @@
 package ru.ifmo.torrent.messages.client_tracker.requests;
 
-import ru.ifmo.torrent.messages.TorrentResponse;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
-import ru.ifmo.torrent.messages.client_tracker.ClientRequest;
 import ru.ifmo.torrent.messages.client_tracker.response.ListResponse;
+import ru.ifmo.torrent.network.Request;
+import ru.ifmo.torrent.network.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class ListRequest extends ClientRequest {
+
+public class ListRequest extends Request {
+
+    public ListRequest() {
+    }
 
     @Override
     public byte marker() {
         return Marker.LIST;
+    }
+
+    @Override
+    public Response getEmptyResponse() {
+        return new ListResponse();
     }
 
     @Override
@@ -25,8 +34,4 @@ public class ListRequest extends ClientRequest {
     public void read(DataInputStream in) {
     }
 
-    @Override
-    public TorrentResponse execute() {
-        return new ListResponse(trackerState.getAvailableFiles());
-    }
 }

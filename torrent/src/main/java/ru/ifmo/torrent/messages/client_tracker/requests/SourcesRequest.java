@@ -1,22 +1,21 @@
 package ru.ifmo.torrent.messages.client_tracker.requests;
 
-import ru.ifmo.torrent.messages.TorrentMessage;
-import ru.ifmo.torrent.messages.TorrentResponse;
+import ru.ifmo.torrent.network.Request;
+import ru.ifmo.torrent.network.Response;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
-import ru.ifmo.torrent.messages.client_tracker.ClientRequest;
 import ru.ifmo.torrent.messages.client_tracker.response.SourcesResponse;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class SourcesRequest extends ClientRequest implements TorrentMessage {
-    private int fileID;
+public class SourcesRequest extends Request {
+    private int fileId;
 
     public SourcesRequest() {}
 
-    public SourcesRequest(int fileID) {
-        this.fileID = fileID;
+    public SourcesRequest(int fileId) {
+        this.fileId = fileId;
     }
 
     @Override
@@ -25,25 +24,29 @@ public class SourcesRequest extends ClientRequest implements TorrentMessage {
     }
 
     @Override
+    public Response getEmptyResponse() {
+        return new SourcesResponse();
+    }
+
+    @Override
     public void write(DataOutputStream out) throws IOException {
         out.writeByte(marker());
-        out.writeInt(fileID);
+        out.writeInt(fileId);
     }
 
     @Override
     public void read(DataInputStream in) throws IOException {
-        fileID = in.readInt();
+        fileId = in.readInt();
 
     }
 
-    @Override
-    public TorrentResponse execute() {
-        System.out.println("sources exec " + fileID + " answ " + trackerState.getSources(fileID));
-        // FIXME if list is empty - get error
-        return new SourcesResponse(fileID, trackerState.getSources(fileID));
+    public int getFileId() {
+        return fileId;
     }
 
-    public int fileID() {
-        return fileID;
+    public static SourcesRequest readFromDataInputStream(DataInputStream in) throws IOException {
+        SourcesRequest request = new SourcesRequest();
+        request.read(in);
+        return request;
     }
 }

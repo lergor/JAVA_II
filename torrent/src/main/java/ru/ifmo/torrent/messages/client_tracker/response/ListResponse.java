@@ -1,19 +1,18 @@
 package ru.ifmo.torrent.messages.client_tracker.response;
 
-import ru.ifmo.torrent.messages.client_tracker.TrackerResponse;
+import ru.ifmo.torrent.network.Response;
 import ru.ifmo.torrent.tracker.state.FileInfo;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListResponse extends TrackerResponse {
+public class ListResponse extends Response {
     private List<FileInfo> files;
 
-    public  ListResponse() {
+    public ListResponse() {
         files = new ArrayList<>();
     }
 
@@ -24,8 +23,8 @@ public class ListResponse extends TrackerResponse {
     @Override
     public void write(DataOutputStream out) throws IOException {
         out.writeInt(files.size());
-        for (FileInfo f: files) {
-            out.writeInt(f.fileID());
+        for (FileInfo f : files) {
+            out.writeInt(f.fileId());
             out.writeUTF(f.name());
             out.writeLong(f.size());
         }
@@ -42,14 +41,6 @@ public class ListResponse extends TrackerResponse {
             files.add(f);
         }
 
-    }
-
-    @Override
-    public void printTo(PrintStream printer) {
-        printer.printf("files count: %d%n", files.size());
-        for (FileInfo f : files) {
-            printer.printf("\t%s\tid: %d, size: %d bytes%n", f.name(), f.fileID(), f.size());
-        }
     }
 
     public List<FileInfo> getFiles() {

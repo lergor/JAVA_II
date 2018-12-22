@@ -5,7 +5,7 @@ import java.nio.file.Path;
 
 public interface StoredState {
 
-    void restoreFromFile(Path file) throws IOException;
+    void restoreFromFile() throws IOException;
 
-    void storeToFile(Path file) throws IOException;
+    void storeToFile() throws IOException;
 }

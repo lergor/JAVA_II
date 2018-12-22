@@ -6,7 +6,6 @@ import ru.ifmo.torrent.util.TorrentException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -14,14 +13,13 @@ public class Tracker implements AutoCloseable, Runnable {
 
     private final ExecutorService pool = Executors.newFixedThreadPool(TrackerConfig.THREADS_COUNT);
     private final short port;
-    private final TrackerState state = new TrackerState();
+    private final TrackerState state;
     private final ServerSocket serverSocket;
 
     public Tracker(short port) throws TorrentException {
-        Path metaDir = TrackerConfig.getStorage();
         this.port = port;
         try {
-            state.restoreFromFile(metaDir.resolve(TrackerConfig.getTrackerStateFile()));
+            state = new TrackerState(TrackerConfig.getTrackerStateFile());
         } catch (IOException e) {
             throw new TorrentException("cannot read meta info about available files", e);
         }
@@ -29,7 +27,7 @@ public class Tracker implements AutoCloseable, Runnable {
         try {
             serverSocket = new ServerSocket(port);
         } catch (IOException e) {
-            throw new TorrentException("Cannot open server socket", e);
+            throw new TorrentException("cannot open server socket", e);
         }
     }
 
@@ -44,7 +42,7 @@ public class Tracker implements AutoCloseable, Runnable {
                     Socket client = serverSocket.accept();
                     pool.submit(new ClientHandler(client, state));
                 }
-            } catch (IOException ignored) { // connection is closed
+            } catch (IOException ignored) {
             }
         });
     }
@@ -53,7 +51,7 @@ public class Tracker implements AutoCloseable, Runnable {
     public void close() throws TorrentException {
         try {
             serverSocket.close();
-            state.storeToFile(TrackerConfig.getStorage().resolve(TrackerConfig.getTrackerStateFile()));
+            state.storeToFile();
             pool.shutdown();
         } catch (IOException e) {
             throw new TorrentException("cannot write meta info about available files", e);
