@@ -11,14 +11,12 @@ import java.util.concurrent.Executors;
 
 public class Seeder implements Runnable, AutoCloseable {
 
-    private final short port;
     private final LocalFilesManager filesManager;
     private final ServerSocket socket;
     private final ExecutorService threadPool = Executors.newFixedThreadPool(4);
 
 
     public Seeder(short port, LocalFilesManager filesManager) throws IOException {
-        this.port = port;
         this.filesManager = filesManager;
         socket = new ServerSocket(port);
     }
@@ -34,10 +32,6 @@ public class Seeder implements Runnable, AutoCloseable {
                 throw new IllegalStateException("cannot close seed socket\n" + e.getMessage());
             }
         }
-    }
-
-    public short getPort() {
-        return (short) socket.getLocalPort();
     }
 
     @Override

@@ -1,7 +1,5 @@
 package ru.ifmo.torrent.client.storage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.util.StoredState;
 
@@ -14,7 +12,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalFilesManager implements StoredState {
-    private static final Logger logger = LoggerFactory.getLogger(LocalFilesManager.class);
 
     private ConcurrentHashMap<Integer, LocalFileReference> localFiles = new ConcurrentHashMap<>();
     private PartsManager partsManager;
@@ -43,10 +40,6 @@ public class LocalFilesManager implements StoredState {
         localFiles.put(fileId, reference);
     }
 
-    public List<Integer> getReadyParts(int fileId) {
-        return getOrThrow(fileId).getReadyParts();
-    }
-
     public void addReadyPartOfFile(int fileId, int part) throws IOException {
         getOrThrow(fileId).addReadyPart(part);
         if (getOrThrow(fileId).getMissingParts().isEmpty()) {
@@ -63,7 +56,6 @@ public class LocalFilesManager implements StoredState {
     }
 
     public LocalFileReference getFileReference(int fileId) {
-        logger.debug(" contains " + fileId  + " " + localFiles.containsKey(fileId));
         return getOrThrow(fileId);
     }
 

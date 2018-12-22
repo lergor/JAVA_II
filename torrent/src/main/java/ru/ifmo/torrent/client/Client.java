@@ -1,7 +1,5 @@
 package ru.ifmo.torrent.client;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.ifmo.torrent.client.leech.Downloader;
 import ru.ifmo.torrent.client.seed.Seeder;
 import ru.ifmo.torrent.client.storage.*;
@@ -24,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Client implements AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     private static final int TRACKER_PORT = 8081;
 
@@ -36,7 +33,6 @@ public class Client implements AutoCloseable {
     private final SourcesUpdater sourcesUpdater;
 
     public Client(InetAddress inetAddress, short port) throws IOException {
-//        this.inetAddress = InetAddress.getByName("192.168.211.41");
         this.inetAddress = inetAddress;
 
         localFilesManager = new LocalFilesManager(ClientConfig.getLocalFilesFile());

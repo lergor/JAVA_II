@@ -1,12 +1,9 @@
 package ru.ifmo.torrent.client.leech;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.ifmo.torrent.client.Client;
 import ru.ifmo.torrent.client.storage.LocalFilesManager;
 import ru.ifmo.torrent.client.storage.PartsManager;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
-import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,7 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class Downloader implements Runnable, AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(Downloader.class);
 
     private final int DOWNLOADS_LIMIT = 5;
 
@@ -47,9 +43,6 @@ public class Downloader implements Runnable, AutoCloseable {
         ).collect(Collectors.toSet());
 
         Set<Integer> fileIds = partsToDownload.stream().map(FilePart::getFileId).collect(Collectors.toSet());
-        if(!fileIds.isEmpty()) {
-            logger.debug("update downloads for files " + fileIds);
-        }
 
         Map<Integer, List<SeedInfo>> sourcesForFile = getSourcesForFiles(fileIds);
         partsToDownload.stream().filter(p -> !sourcesForFile.get(p.getFileId()).isEmpty())
@@ -67,7 +60,6 @@ public class Downloader implements Runnable, AutoCloseable {
 
     private void downloadPart(FilePart part, List<SeedInfo> sources) {
         if (!sources.isEmpty()) {
-            logger.debug("part to download: " + part.fileId +" " + part.num);
             pool.submit(new DownloadTask(part, sources));
         }
     }
@@ -102,7 +94,8 @@ public class Downloader implements Runnable, AutoCloseable {
             if (!maybeSource.isPresent()) return;
 
             SeedInfo source = maybeSource.get();
-            try (Leecher leecher = new Leecher(source.port(), source.inetAddress())) {
+            Leecher leecher = new Leecher(source.port(), source.inetAddress());
+            try {
                 byte[] content = leecher.getPartContent(part.getFileId(), part.getPartNum());
 
                 try (OutputStream out = partsManager.getForWriting(part.getFileId(), part.getPartNum())) {
@@ -110,7 +103,7 @@ public class Downloader implements Runnable, AutoCloseable {
                     out.flush();
                 }
 
-            } catch (TorrentException | IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 return;
             }
@@ -126,13 +119,10 @@ public class Downloader implements Runnable, AutoCloseable {
 
         private Optional<SeedInfo> getSource() {
             for (SeedInfo s : sources) {
-                try (Leecher leecher = new Leecher(s.port(), s.inetAddress())) {
-                    List<Integer> availableParts = leecher.getAvailableParts(part.getFileId());
-                    if (availableParts.contains(part.getPartNum())) {
-                        return Optional.of(s);
-                    }
-                } catch (TorrentException | IOException e) {
-                    e.printStackTrace();
+                Leecher leecher = new Leecher(s.port(), s.inetAddress());
+                List<Integer> availableParts = leecher.getAvailableParts(part.getFileId());
+                if (availableParts.contains(part.getPartNum())) {
+                    return Optional.of(s);
                 }
             }
             return Optional.empty();

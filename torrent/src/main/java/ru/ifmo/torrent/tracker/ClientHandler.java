@@ -1,7 +1,5 @@
 package ru.ifmo.torrent.tracker;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
 import ru.ifmo.torrent.messages.client_tracker.requests.*;
 import ru.ifmo.torrent.messages.client_tracker.response.*;
@@ -20,7 +18,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ClientHandler implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
 
     private final Socket client;
     private final TrackerState trackerState;
@@ -28,7 +25,6 @@ public class ClientHandler implements Runnable {
     ClientHandler(Socket client, TrackerState trackerState) {
         this.client = client;
         this.trackerState = trackerState;
-        logger.debug("client: " + client.getInetAddress() + " " + client.getPort());
     }
 
     @Override
@@ -40,7 +36,6 @@ public class ClientHandler implements Runnable {
             Response response = null;
             int marker;
             while ((marker = in.read()) != -1) {
-                System.out.println("get request with"+ marker + " client " + client.getInetAddress() + " " + client.getPort());
                 switch (marker) {
                     case Marker.LIST:
                         response = new ListResponse(trackerState.getAvailableFiles());
@@ -74,7 +69,7 @@ public class ClientHandler implements Runnable {
                 }
             }
         }  catch (Exception e) {
-            logger.error("error on tracker " + Arrays.toString(e.getStackTrace()));
+            e.printStackTrace();
         }
     }
 

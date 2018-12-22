@@ -1,8 +1,5 @@
 package ru.ifmo.torrent.tracker.state;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.util.StoredState;
 
 import java.io.DataInputStream;
@@ -20,7 +17,6 @@ import java.util.stream.Collectors;
 
 public class TrackerState implements StoredState {
 
-    private static final Logger logger = LoggerFactory.getLogger(TrackerState.class);
     private final ScheduledExecutorService pool;
     private final ConcurrentHashMap<Integer, FileInfo> IDToInfo = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, Set<TimedSeedInfo>> IDToSources = new ConcurrentHashMap<>();
@@ -96,9 +92,7 @@ public class TrackerState implements StoredState {
 
             Set<TimedSeedInfo> values = fileToSources.getValue();
             synchronized (values) {
-                int n = values.size();
                 values.removeIf(s -> s.notAlive(currentTime));
-                logger.debug("clearing sources, size before " + n + " after " + values.size());
             }
         }
     }

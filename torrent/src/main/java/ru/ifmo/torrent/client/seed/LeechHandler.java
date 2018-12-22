@@ -1,7 +1,5 @@
 package ru.ifmo.torrent.client.seed;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.ifmo.torrent.client.storage.LocalFileReference;
 import ru.ifmo.torrent.client.storage.LocalFilesManager;
 import ru.ifmo.torrent.messages.seed_peer.Marker;
@@ -17,7 +15,6 @@ import java.net.Socket;
 import java.util.List;
 
 class LeechHandler implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(LeechHandler.class);
 
     private final Socket peerSocket;
     private final LocalFilesManager filesManager;
@@ -39,7 +36,6 @@ class LeechHandler implements Runnable {
                 switch (marker) {
                     case Marker.GET: {
                         GetRequest request = GetRequest.readFromDataInputStream(in);
-                        logger.debug("Serving {}", request);
                         InputStream is = getPartForDownloading(request.getFileID(), request.getPart());
                         response = new GetResponse(is);
                         is.close();
@@ -48,7 +44,6 @@ class LeechHandler implements Runnable {
                     case Marker.STAT: {
                         StatRequest request = StatRequest.readFromDataInputStream(in);
                         List<Integer> av = getParts(request.getFileID());
-                        logger.debug("parts " + av);
                         response = new StatResponse(av);
                         break;
                     }
@@ -66,12 +61,8 @@ class LeechHandler implements Runnable {
                     if (response instanceof GetResponse) {
                         break;
                     }
-
-                    logger.debug("Request is served with response {}", response);
                 }
             }
-
-            logger.debug("Client {} is handled", peerSocket);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -80,12 +71,10 @@ class LeechHandler implements Runnable {
     }
 
     private InputStream getPartForDownloading(int fileId, int filePart) throws IOException {
-        logger.debug("getPartForDownloading for " + fileId + " " + filePart);
         return filesManager.getPartsManager().getForReading(fileId, filePart);
     }
 
     private List<Integer> getParts(int fileId) {
-        logger.debug("getParts for " + fileId);
         LocalFileReference file = filesManager.getFileReference(fileId);
         return file.getReadyParts();
     }

@@ -10,9 +10,6 @@ public class TrackerConfig extends Config {
     public static final short TRACKER_PORT = 8081;
     public static final int THREADS_COUNT = 8;
 
-    public static final String ID_TO_FILE = "id_to_file";
-    public static final String ID_TO_CLIENT = "id_to_client";
-    public static final String CLIENT_LAST_UPD = "client_last_upd";
     public static final String TRACKER_STATE_FILE = "tracker_state_file";
 
     private TrackerConfig() {
