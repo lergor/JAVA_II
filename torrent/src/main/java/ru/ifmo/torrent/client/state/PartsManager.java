@@ -12,11 +12,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class StorageManager {
+public class PartsManager {
 
     private final Path storage;
 
-    public StorageManager(Path storage) {
+    public PartsManager(Path storage) {
         this.storage = storage;
         if (Files.notExists(storage)) {
             storage.toFile().mkdirs();
@@ -28,9 +28,9 @@ public class StorageManager {
         int partNumber = 0;
         byte[] buf = new byte[ClientConfig.FILE_PART_SIZE];
         while (true) {
+            int readed = is.read(buf);
+            if(readed == -1) return;
             try(OutputStream out = getForWriting(fileId, partNumber)) {
-                int readed = is.read(buf);
-                if(readed == -1) return;
                 out.write(buf, 0, readed);
                 partNumber++;
             }

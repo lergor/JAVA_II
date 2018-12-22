@@ -4,7 +4,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.ifmo.torrent.messages.client_tracker.requests.*;
-import ru.ifmo.torrent.network.Request;
+import ru.ifmo.torrent.messages.Request;
 
 import java.io.*;
 import java.nio.file.Path;

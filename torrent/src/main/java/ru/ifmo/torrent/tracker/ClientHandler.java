@@ -3,7 +3,7 @@ package ru.ifmo.torrent.tracker;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
 import ru.ifmo.torrent.messages.client_tracker.requests.*;
 import ru.ifmo.torrent.messages.client_tracker.response.*;
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Response;
 import ru.ifmo.torrent.tracker.state.FileInfo;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
 import ru.ifmo.torrent.tracker.state.TrackerState;
@@ -72,7 +72,7 @@ public class ClientHandler implements Runnable {
 
     private boolean update(List<Integer> fileIds, SeedInfo newSeed) {
         Set<Integer> allFiles = trackerState.getAvailableFiles().stream()
-            .map(FileInfo::fileId)
+            .map(FileInfo::getId)
             .collect(Collectors.toSet());
         if (!allFiles.containsAll(fileIds)) {
             return false;

@@ -2,8 +2,8 @@ package ru.ifmo.torrent.messages.seed_peer.requests;
 
 import ru.ifmo.torrent.messages.seed_peer.Marker;
 import ru.ifmo.torrent.messages.seed_peer.response.StatResponse;
-import ru.ifmo.torrent.network.Request;
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Request;
+import ru.ifmo.torrent.messages.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -42,5 +42,11 @@ public class StatRequest extends Request {
 
     public int getFileID() {
         return fileID;
+    }
+
+    public static StatRequest readFromDataInputStream(DataInputStream in) throws IOException {
+        StatRequest request = new StatRequest();
+        request.read(in);
+        return request;
     }
 }

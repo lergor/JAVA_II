@@ -8,21 +8,24 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalFilesManager implements StoredState {
 
     private ConcurrentHashMap<Integer, LocalFileReference> localFiles = new ConcurrentHashMap<>();
-    private final Path metaFile;
+    private PartsManager partsManager;
+    private final Path metaDir;
 
-    public LocalFilesManager(Path metadir) throws IOException {
-        metaFile = metadir.resolve("client_state_file");
-        if (Files.notExists(metaFile)) {
-            metaFile.getParent().toFile().mkdirs();
-            Files.createFile(metaFile);
+    public LocalFilesManager(Path metaDir) throws IOException {
+        this.metaDir = metaDir.resolve("manager_file");
+        if (Files.notExists(this.metaDir)) {
+            this.metaDir.getParent().toFile().mkdirs();
+            Files.createFile(this.metaDir);
             return;
         }
+        partsManager = new PartsManager(metaDir.resolve("parts"));
     }
 
     public void addLocalFile(String name, int fileId, long size) {
@@ -32,19 +35,21 @@ public class LocalFilesManager implements StoredState {
         }
     }
 
-    public void addNotDownloadedFile(String name, int fileId, long size) throws IOException {
-        int partsNum = getPartsNumber(size);
-        if (localFiles.putIfAbsent(fileId, LocalFileReference.createEmpty(name, fileId, partsNum)) != null) {
-            throw new IllegalArgumentException("file with id " + fileId + " already added");
-        }
+    public void addNotDownloadedFile(String name, int fileId, long size) {
+        Path file = metaDir.resolve(name);
+        LocalFileReference reference = LocalFileReference.createEmpty(name, fileId, getPartsNumber(size));
+        localFiles.put(fileId, reference);
     }
 
     public List<Integer> getReadyParts(int fileId) {
         return getOrThrow(fileId).getReadyParts();
     }
 
-    public void addReadyPartOfFile(int fileId, int part) {
+    public void addReadyPartOfFile(int fileId, int part) throws IOException {
         getOrThrow(fileId).addReadyPart(part);
+        if(getOrThrow(fileId).getMissingParts().isEmpty()) {
+            partsManager.mergeSplitted(fileId, Paths.get(System.getProperty("user.dir")).resolve("downloads"));
+        }
     }
 
     private LocalFileReference getOrThrow(int fileId) {
@@ -54,7 +59,7 @@ public class LocalFilesManager implements StoredState {
         );
     }
 
-    public LocalFileReference getFileState(int fileId) {
+    public LocalFileReference getFileReference(int fileId) {
         return getOrThrow(fileId);
     }
 
@@ -68,7 +73,7 @@ public class LocalFilesManager implements StoredState {
 
     @Override
     public void storeToFile() throws IOException {
-        try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(metaFile))) {
+        try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(metaDir))) {
             out.writeInt(localFiles.size());
             for (LocalFileReference file : localFiles.values()) {
                 file.write(out);
@@ -79,7 +84,7 @@ public class LocalFilesManager implements StoredState {
 
     @Override
     public void restoreFromFile() throws IOException {
-        try (DataInputStream in = new DataInputStream(Files.newInputStream(metaFile))) {
+        try (DataInputStream in = new DataInputStream(Files.newInputStream(metaDir))) {
             int numOfLOcalFiles = in.readInt();
             localFiles = new ConcurrentHashMap<>();
             for (int i = 0; i < numOfLOcalFiles; i++) {
@@ -87,5 +92,9 @@ public class LocalFilesManager implements StoredState {
                 localFiles.put(file.getFileId(), file);
             }
         }
+    }
+
+    public PartsManager getPartsManager() {
+        return partsManager;
     }
 }

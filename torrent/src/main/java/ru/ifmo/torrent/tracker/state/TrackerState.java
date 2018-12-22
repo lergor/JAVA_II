@@ -7,15 +7,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TrackerState implements StoredState {
 
     private final ConcurrentHashMap<Integer, FileInfo> IDToInfo = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Integer, HashSet<SeedInfo>> IDToSources = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Set<SeedInfo>> IDToSources = new ConcurrentHashMap<>();
     private final Path metaFile;
 
     public TrackerState(Path metaFile) throws IOException {
@@ -43,7 +41,7 @@ public class TrackerState implements StoredState {
     }
 
     public synchronized List<SeedInfo> getSources(int fileId) {
-        return new ArrayList<>(IDToSources.get(fileId));
+        return new ArrayList<>(IDToSources.getOrDefault(fileId, Collections.emptySet()));
     }
 
     @Override
@@ -71,7 +69,7 @@ public class TrackerState implements StoredState {
             int filesNumber = in.readInt();
             for (int i = 0; i < filesNumber; ++i) {
                 FileInfo fileInfo = FileInfo.readFrom(in);
-                IDToInfo.put(fileInfo.fileId(), fileInfo);
+                IDToInfo.put(fileInfo.getId(), fileInfo);
             }
         }
     }

@@ -2,6 +2,7 @@ package ru.ifmo.torrent.tracker.state;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 
 public class SeedInfo {
     private final short port;
@@ -27,5 +28,19 @@ public class SeedInfo {
 
     public InetAddress inetAddress() {
         return inetAddress;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SeedInfo seedInfo = (SeedInfo) o;
+        return port == seedInfo.port &&
+            Objects.equals(inetAddress, seedInfo.inetAddress);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(port, inetAddress);
     }
 }

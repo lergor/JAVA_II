@@ -32,7 +32,7 @@ public class TrackerStateTest {
     public void testStoringAndRestoringState() throws IOException {
         Path file = createMetaFile();
         TrackerState storedState = new TrackerState(file);
-        files.forEach(f -> storedState.addFile(f.name(), f.size()));
+        files.forEach(f -> storedState.addFile(f.getName(), f.getSize()));
         storedState.storeToFile();
 
         TrackerState restoredState = new TrackerState(file);
@@ -41,9 +41,9 @@ public class TrackerStateTest {
 
         assertThat(files.size()).isEqualTo(restoredFiles.size());
         for (int i = 0; i < files.size(); i++) {
-            assertThat(restoredFiles.get(i).fileId()).isEqualTo(files.get(i).fileId());
-            assertThat(restoredFiles.get(i).name()).isEqualTo(files.get(i).name());
-            assertThat(restoredFiles.get(i).size()).isEqualTo(files.get(i).size());
+            assertThat(restoredFiles.get(i).getId()).isEqualTo(files.get(i).getId());
+            assertThat(restoredFiles.get(i).getName()).isEqualTo(files.get(i).getName());
+            assertThat(restoredFiles.get(i).getSize()).isEqualTo(files.get(i).getSize());
         }
     }
 
@@ -57,9 +57,9 @@ public class TrackerStateTest {
         int ID = state.addFile(fileName, fileSize);
         assertThat(state.getAvailableFiles().size()).isEqualTo(1);
         FileInfo addedFile = state.getAvailableFiles().get(0);
-        assertThat(addedFile.fileId()).isEqualTo(ID);
-        assertThat(addedFile.name()).isEqualTo(fileName);
-        assertThat(addedFile.size()).isEqualTo(fileSize);
+        assertThat(addedFile.getId()).isEqualTo(ID);
+        assertThat(addedFile.getName()).isEqualTo(fileName);
+        assertThat(addedFile.getSize()).isEqualTo(fileSize);
     }
 
 }

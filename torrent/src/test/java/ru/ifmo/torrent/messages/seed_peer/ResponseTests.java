@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.ifmo.torrent.messages.seed_peer.response.GetResponse;
 import ru.ifmo.torrent.messages.seed_peer.response.StatResponse;
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Response;
 
 import java.io.*;
 import java.nio.file.Files;

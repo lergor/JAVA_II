@@ -1,6 +1,6 @@
 package ru.ifmo.torrent.messages.client_tracker.response;
 
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Response;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
 
 import java.io.DataInputStream;
@@ -41,14 +41,6 @@ public class SourcesResponse extends Response {
             clients.add(new SeedInfo(port, IP));
         }
     }
-
-//    @Override
-//    public void printTo(PrintStream printer) {
-//        printer.printf("sources count: %d%n", clients.size());
-//        for (SeedInfo source : clients) {
-//            printer.printf("\taddress: %s, port: %d%n", source.inetAddress(), source.port());
-//        }
-//    }
 
     public int getFileId() {
         return fileId;

@@ -2,8 +2,8 @@ package ru.ifmo.torrent.messages.seed_peer.requests;
 
 import ru.ifmo.torrent.messages.seed_peer.Marker;
 import ru.ifmo.torrent.messages.seed_peer.response.GetResponse;
-import ru.ifmo.torrent.network.Request;
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Request;
+import ru.ifmo.torrent.messages.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -51,5 +51,11 @@ public class GetRequest extends Request {
 
     public int getPart() {
         return part;
+    }
+
+    public static GetRequest readFromDataInputStream(DataInputStream in) throws IOException {
+        GetRequest request = new GetRequest();
+        request.read(in);
+        return request;
     }
 }

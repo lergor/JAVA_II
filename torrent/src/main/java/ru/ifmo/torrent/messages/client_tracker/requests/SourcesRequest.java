@@ -1,7 +1,7 @@
 package ru.ifmo.torrent.messages.client_tracker.requests;
 
-import ru.ifmo.torrent.network.Request;
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Request;
+import ru.ifmo.torrent.messages.Response;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
 import ru.ifmo.torrent.messages.client_tracker.response.SourcesResponse;
 

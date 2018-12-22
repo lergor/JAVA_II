@@ -1,4 +1,4 @@
-package ru.ifmo.torrent.network;
+package ru.ifmo.torrent.messages;
 
 public abstract class Request implements NetworkMessage {
 

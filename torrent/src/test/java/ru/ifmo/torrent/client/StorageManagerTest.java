@@ -5,7 +5,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import ru.ifmo.torrent.client.state.StorageManager;
+import ru.ifmo.torrent.client.state.PartsManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,18 +25,18 @@ public class StorageManagerTest {
         Path file = folder.newFile().toPath();
         String content = "content";
         FileUtils.writeStringToFile(file.toFile(), content);
-        StorageManager storageManager = new StorageManager(folder.getRoot().toPath());
+        PartsManager partsManager = new PartsManager(folder.getRoot().toPath());
 
         int id = 0;
-        storageManager.storeSplitted(id, file);
-        String storedContent = IOUtils.toString(storageManager.getForReading(id,0));
+        partsManager.storeSplitted(id, file);
+        String storedContent = IOUtils.toString(partsManager.getForReading(id,0));
         assertThat(storedContent).isEqualTo(content);
     }
 
     @Test
     public void testMergeParts() throws IOException {
         Path fileDir = folder.newFolder("0").toPath();
-        StorageManager storageManager = new StorageManager(folder.getRoot().toPath());
+        PartsManager partsManager = new PartsManager(folder.getRoot().toPath());
         List<Integer> partsNum = Arrays.asList(0, 1, 2);
         List<Path> files = Arrays.asList(
             Files.createFile(fileDir.resolve("0")),
@@ -50,7 +50,7 @@ public class StorageManagerTest {
         }
 
         Path mergedFile = folder.newFile().toPath();
-        storageManager.mergeSplitted(0, mergedFile);
+        partsManager.mergeSplitted(0, mergedFile);
 
         String storedContent = FileUtils.readFileToString(mergedFile.toFile());
         assertThat(storedContent).isEqualTo("content1content2content3");

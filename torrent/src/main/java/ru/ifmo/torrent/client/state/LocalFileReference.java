@@ -28,7 +28,7 @@ public class LocalFileReference {
     }
 
     public static LocalFileReference createFull(String name, int fileId, int numberOfParts) {
-        Set<Integer> readyParts = IntStream.range(0, numberOfParts - 1).boxed().collect(Collectors.toSet());
+        Set<Integer> readyParts = IntStream.range(0, numberOfParts).boxed().collect(Collectors.toSet());
         return new LocalFileReference(name, fileId, numberOfParts, readyParts);
     }
 
@@ -80,5 +80,11 @@ public class LocalFileReference {
             out.writeInt(part);
         }
         out.flush();
+    }
+
+    public List<Integer> getMissingParts() {
+        return IntStream.range(0, numberOfParts).boxed()
+            .filter(i -> !readyParts.contains(i))
+            .collect(Collectors.toList());
     }
 }

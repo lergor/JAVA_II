@@ -15,6 +15,7 @@ public class LocalFilesManagerTest {
 
     private static final long size = 17;
     private static final int id = 0;
+    private static final String name = "kek";
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -28,7 +29,7 @@ public class LocalFilesManagerTest {
     @Test
     public void testAddAndGet() throws IOException {
         LocalFilesManager state = new LocalFilesManager(folder.getRoot().toPath());
-        state.addLocalFile(id, size);
+        state.addLocalFile(name, id, size);
         testGetFile(state);
     }
 
@@ -36,7 +37,7 @@ public class LocalFilesManagerTest {
     public void testAddAndContainsAfterReloading() throws IOException {
         LocalFilesManager storedState = new LocalFilesManager(folder.getRoot().toPath());
 
-        storedState.addLocalFile(id, size);
+        storedState.addLocalFile(name, id, size);
         testGetFile(storedState);
         storedState.storeToFile();
 
@@ -47,8 +48,9 @@ public class LocalFilesManagerTest {
     }
 
     private void testGetFile(LocalFilesManager state) {
-        LocalFileReference fileState = state.getFileState(id);
+        LocalFileReference fileState = state.getFileReference(id);
         assertThat(fileState.getFileId()).isEqualTo(id);
+        assertThat(fileState.getName()).isEqualTo(name);
         assertThat(fileState.getNumberOfParts()).isEqualTo(1);
     }
 

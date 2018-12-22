@@ -1,6 +1,6 @@
 package ru.ifmo.torrent.messages.client_tracker.response;
 
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Response;
 import ru.ifmo.torrent.tracker.state.FileInfo;
 
 import java.io.DataInputStream;
@@ -24,9 +24,9 @@ public class ListResponse extends Response {
     public void write(DataOutputStream out) throws IOException {
         out.writeInt(files.size());
         for (FileInfo f : files) {
-            out.writeInt(f.fileId());
-            out.writeUTF(f.name());
-            out.writeLong(f.size());
+            out.writeInt(f.getId());
+            out.writeUTF(f.getName());
+            out.writeLong(f.getSize());
         }
     }
 

@@ -19,15 +19,15 @@ public class FileInfo {
         this.size = size;
     }
 
-    public int fileId() {
+    public int getId() {
         return id;
     }
 
-    public long size() {
+    public long getSize() {
         return size;
     }
 
-    public String name() {
+    public String getName() {
         return name;
     }
 

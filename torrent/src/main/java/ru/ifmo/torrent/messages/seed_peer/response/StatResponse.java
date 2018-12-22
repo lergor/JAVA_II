@@ -1,11 +1,10 @@
 package ru.ifmo.torrent.messages.seed_peer.response;
 
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class StatResponse extends Response {
 
 //    @Override
 //    public void printTo(PrintStream printer) {
-//        printer.printf("parts count: %d%n", availableParts.size());
+//        printer.printf("parts count: %d%n", availableParts.getSize());
 //        for (Integer i: availableParts) {
 //            printer.println(i);
 //        }

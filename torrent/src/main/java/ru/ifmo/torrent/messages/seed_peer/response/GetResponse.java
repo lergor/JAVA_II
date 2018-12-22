@@ -1,7 +1,7 @@
 package ru.ifmo.torrent.messages.seed_peer.response;
 
 import ru.ifmo.torrent.client.ClientConfig;
-import ru.ifmo.torrent.network.Response;
+import ru.ifmo.torrent.messages.Response;
 
 import java.io.*;
 
@@ -11,10 +11,9 @@ public class GetResponse extends Response {
 
     public GetResponse() {}
 
-    public GetResponse(OutputStream out) throws IOException {
+    public GetResponse(InputStream in) throws IOException {
         this.content = new byte[ClientConfig.FILE_PART_SIZE];
-        out.write(content);
-        out.flush();
+        in.read(content);
     }
 
     public GetResponse(byte[] content) {

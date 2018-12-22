@@ -3,7 +3,6 @@ package ru.ifmo.torrent.client;
 import ru.ifmo.torrent.client.state.LocalFileReference;
 import ru.ifmo.torrent.tracker.state.FileInfo;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
-import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -23,10 +22,10 @@ public class ClientApp {
         printer.print("enter client port: ");
         Short port = getPort(args, scanner);
 
+        Client client = new Client(InetAddress.getLocalHost(), port);
         main_while:
         while (scanner.hasNext()) {
             String command = scanner.next();
-            try (Client client = new Client(InetAddress.getLocalHost(), port)) {
                 switch (command) {
                     case Command.EXIT: {
                         printer.println("client: shutting down");
@@ -36,7 +35,7 @@ public class ClientApp {
                         List<FileInfo> files = client.getAvailableFiles();
                         printer.printf("files count: %d%n", files.size());
                         for (FileInfo f : files) {
-                            printer.printf("\t%s\tid: %d, size: %d bytes%n", f.name(), f.fileId(), f.size());
+                            printer.printf("\t%s\tid: %d, getSize: %d bytes%n", f.getName(), f.getId(), f.getSize());
                         }
                         break;
                     }
@@ -44,7 +43,8 @@ public class ClientApp {
                         String path = scanner.next();
                         Path file = Paths.get(path);
                         if (Files.notExists(file)) {
-                            throw new TorrentException("file '" + file + "' does not exists");
+                            printer.println("file '" + file + "' does not exists");
+                            break;
                         }
                         int fileId = client.uploadFile(file);
                         printer.printf("file added with id: %d%n", fileId);
@@ -76,17 +76,15 @@ public class ClientApp {
                                 f.getNumberOfParts()
                             );
                         }
+                        break;
                     }
 
                     default:
                         printer.printf("client: unknown command: %s%n", command);
                         break;
                 }
-            } catch (TorrentException e) {
-                e.printStackTrace();
-            }
         }
-
+        client.close();
     }
 
     private static Short getPort(String[] args, Scanner scanner) {

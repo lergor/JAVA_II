@@ -1,4 +1,4 @@
-package ru.ifmo.torrent.network;
+package ru.ifmo.torrent.messages;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
