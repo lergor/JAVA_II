@@ -35,12 +35,10 @@ public class Tracker implements AutoCloseable, Runnable {
     public void run() {
         pool.submit(() -> {
             System.out.println("tracker started at port " + port);
-//            pool.submit(new SeedListUpdater());
 
             try {
                 while (!Thread.interrupted()) {
                     Socket client = serverSocket.accept();
-                    System.out.println("client " + client.getInetAddress() + " " + client.getPort());
                     pool.submit(new ClientHandler(client, state));
                 }
             } catch (IOException ignored) {

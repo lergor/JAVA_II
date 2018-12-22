@@ -1,5 +1,7 @@
 package ru.ifmo.torrent.tracker;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
 import ru.ifmo.torrent.messages.client_tracker.requests.*;
 import ru.ifmo.torrent.messages.client_tracker.response.*;
@@ -10,19 +12,23 @@ import ru.ifmo.torrent.tracker.state.TrackerState;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ClientHandler implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
+
     private final Socket client;
     private final TrackerState trackerState;
 
     ClientHandler(Socket client, TrackerState trackerState) {
         this.client = client;
         this.trackerState = trackerState;
+        logger.debug("client: " + client.getInetAddress() + " " + client.getPort());
     }
 
     @Override
@@ -34,6 +40,7 @@ public class ClientHandler implements Runnable {
             Response response = null;
             int marker;
             while ((marker = in.read()) != -1) {
+                System.out.println("get request with"+ marker + " client " + client.getInetAddress() + " " + client.getPort());
                 switch (marker) {
                     case Marker.LIST:
                         response = new ListResponse(trackerState.getAvailableFiles());
@@ -46,7 +53,8 @@ public class ClientHandler implements Runnable {
                     }
                     case Marker.UPDATE: {
                         UpdateRequest request = UpdateRequest.readFromDataInputStream(in);
-                        SeedInfo newSeed = new SeedInfo(request.getClientPort(), clientSocket.getInetAddress());
+                        InetAddress address = InetAddress.getByName(clientSocket.getInetAddress().getHostAddress());
+                        SeedInfo newSeed = new SeedInfo(request.getClientPort(), address);
                         boolean success = update(request.getFileIds(), newSeed);
                         response =  new UpdateResponse(success);
                         break;
@@ -65,8 +73,8 @@ public class ClientHandler implements Runnable {
                     out.flush();
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace(System.err);
+        }  catch (Exception e) {
+            logger.error("error on tracker " + Arrays.toString(e.getStackTrace()));
         }
     }
 

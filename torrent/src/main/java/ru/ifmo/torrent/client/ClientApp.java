@@ -1,8 +1,9 @@
 package ru.ifmo.torrent.client;
 
-import ru.ifmo.torrent.client.state.LocalFileReference;
+import ru.ifmo.torrent.client.storage.LocalFileReference;
 import ru.ifmo.torrent.tracker.state.FileInfo;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
+import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -15,17 +16,17 @@ import java.util.Scanner;
 
 public class ClientApp {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, TorrentException {
         Scanner scanner = new Scanner(System.in);
         PrintStream printer = new PrintStream(System.out);
 
         printer.print("enter client port: ");
         Short port = getPort(args, scanner);
 
-        Client client = new Client(InetAddress.getLocalHost(), port);
-        main_while:
-        while (scanner.hasNext()) {
-            String command = scanner.next();
+        try (Client client = new Client(InetAddress.getLocalHost(), port)) {
+            main_while:
+            while (scanner.hasNext()) {
+                String command = scanner.next();
                 switch (command) {
                     case Command.EXIT: {
                         printer.println("client: shutting down");
@@ -62,6 +63,7 @@ public class ClientApp {
                     case Command.DOWNLOAD: {
                         int fileId = scanner.nextInt();
                         client.downloadFile(fileId);
+                        printer.println("file with id " + fileId + " download");
                         break;
                     }
                     case Command.STATS: {
@@ -83,8 +85,8 @@ public class ClientApp {
                         printer.printf("client: unknown command: %s%n", command);
                         break;
                 }
+            }
         }
-        client.close();
     }
 
     private static Short getPort(String[] args, Scanner scanner) {

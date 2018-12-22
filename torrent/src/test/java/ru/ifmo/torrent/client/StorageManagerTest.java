@@ -5,7 +5,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import ru.ifmo.torrent.client.state.PartsManager;
+import ru.ifmo.torrent.client.storage.PartsManager;
 
 import java.io.IOException;
 import java.nio.file.Files;

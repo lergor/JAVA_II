@@ -1,4 +1,4 @@
-package ru.ifmo.torrent.client.state;
+package ru.ifmo.torrent.client.storage;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

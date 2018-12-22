@@ -1,4 +1,4 @@
-package ru.ifmo.torrent.client.state;
+package ru.ifmo.torrent.client.storage;
 
 import ru.ifmo.torrent.client.ClientConfig;
 
@@ -42,7 +42,10 @@ public class PartsManager {
         List<Path> parts = Files.list(fileDir)
             .sorted(Comparator.comparing(this::parsePartName))
             .collect(Collectors.toList());
-
+        if (Files.notExists(targetFile)) {
+            Files.createDirectories(targetFile.getParent());
+            Files.createFile(targetFile);
+        }
         OutputStream out = Files.newOutputStream(targetFile, StandardOpenOption.TRUNCATE_EXISTING);
         for (Path p: parts) {
             Files.copy(p, out);

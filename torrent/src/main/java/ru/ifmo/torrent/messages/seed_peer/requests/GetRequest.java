@@ -58,4 +58,12 @@ public class GetRequest extends Request {
         request.read(in);
         return request;
     }
+
+    @Override
+    public String toString() {
+        return "GetRequest{" +
+            "fileID=" + fileID +
+            ", part=" + part +
+            '}';
+    }
 }

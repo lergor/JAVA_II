@@ -1,4 +1,4 @@
-package ru.ifmo.torrent.client.state;
+package ru.ifmo.torrent.client.storage;
 
 import ru.ifmo.torrent.client.Client;
 import ru.ifmo.torrent.client.ClientConfig;

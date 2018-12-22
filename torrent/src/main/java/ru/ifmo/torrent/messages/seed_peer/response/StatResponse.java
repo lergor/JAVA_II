@@ -35,14 +35,6 @@ public class StatResponse extends Response {
         }
     }
 
-//    @Override
-//    public void printTo(PrintStream printer) {
-//        printer.printf("parts count: %d%n", availableParts.getSize());
-//        for (Integer i: availableParts) {
-//            printer.println(i);
-//        }
-//    }
-
     public List<Integer> getAvailableParts() {
         return availableParts;
     }

@@ -1,5 +1,7 @@
-package ru.ifmo.torrent.client.state;
+package ru.ifmo.torrent.client.storage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.util.StoredState;
 
@@ -8,24 +10,24 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LocalFilesManager implements StoredState {
+    private static final Logger logger = LoggerFactory.getLogger(LocalFilesManager.class);
 
     private ConcurrentHashMap<Integer, LocalFileReference> localFiles = new ConcurrentHashMap<>();
     private PartsManager partsManager;
-    private final Path metaDir;
+    private final Path metaFile;
 
-    public LocalFilesManager(Path metaDir) throws IOException {
-        this.metaDir = metaDir.resolve("manager_file");
-        if (Files.notExists(this.metaDir)) {
-            this.metaDir.getParent().toFile().mkdirs();
-            Files.createFile(this.metaDir);
+    public LocalFilesManager(Path metaFile) throws IOException {
+        this.metaFile = metaFile.resolve("manager_file");
+        if (Files.notExists(this.metaFile)) {
+            this.metaFile.getParent().toFile().mkdirs();
+            Files.createFile(this.metaFile);
             return;
         }
-        partsManager = new PartsManager(metaDir.resolve("parts"));
+        partsManager = new PartsManager(ClientConfig.getLocalFilesStorage());
     }
 
     public void addLocalFile(String name, int fileId, long size) {
@@ -36,7 +38,7 @@ public class LocalFilesManager implements StoredState {
     }
 
     public void addNotDownloadedFile(String name, int fileId, long size) {
-        Path file = metaDir.resolve(name);
+        Path file = metaFile.resolve(name);
         LocalFileReference reference = LocalFileReference.createEmpty(name, fileId, getPartsNumber(size));
         localFiles.put(fileId, reference);
     }
@@ -47,8 +49,9 @@ public class LocalFilesManager implements StoredState {
 
     public void addReadyPartOfFile(int fileId, int part) throws IOException {
         getOrThrow(fileId).addReadyPart(part);
-        if(getOrThrow(fileId).getMissingParts().isEmpty()) {
-            partsManager.mergeSplitted(fileId, Paths.get(System.getProperty("user.dir")).resolve("downloads"));
+        if (getOrThrow(fileId).getMissingParts().isEmpty()) {
+            String fileName = localFiles.get(fileId).getName();
+            partsManager.mergeSplitted(fileId, ClientConfig.TORRENT_DIR.resolve(fileName));
         }
     }
 
@@ -60,6 +63,7 @@ public class LocalFilesManager implements StoredState {
     }
 
     public LocalFileReference getFileReference(int fileId) {
+        logger.debug(" contains " + fileId  + " " + localFiles.containsKey(fileId));
         return getOrThrow(fileId);
     }
 
@@ -73,7 +77,7 @@ public class LocalFilesManager implements StoredState {
 
     @Override
     public void storeToFile() throws IOException {
-        try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(metaDir))) {
+        try (DataOutputStream out = new DataOutputStream(Files.newOutputStream(metaFile))) {
             out.writeInt(localFiles.size());
             for (LocalFileReference file : localFiles.values()) {
                 file.write(out);
@@ -84,10 +88,11 @@ public class LocalFilesManager implements StoredState {
 
     @Override
     public void restoreFromFile() throws IOException {
-        try (DataInputStream in = new DataInputStream(Files.newInputStream(metaDir))) {
-            int numOfLOcalFiles = in.readInt();
-            localFiles = new ConcurrentHashMap<>();
-            for (int i = 0; i < numOfLOcalFiles; i++) {
+        if (Files.size(metaFile) == 0) return;
+        localFiles = new ConcurrentHashMap<>();
+        try (DataInputStream in = new DataInputStream(Files.newInputStream(metaFile))) {
+            int numOfLocalFiles = in.readInt();
+            for (int i = 0; i < numOfLocalFiles; i++) {
                 LocalFileReference file = LocalFileReference.readFrom(in);
                 localFiles.put(file.getFileId(), file);
             }

@@ -1,15 +1,17 @@
 package ru.ifmo.torrent.client;
 
-import ru.ifmo.torrent.client.state.LocalFilesManager;
-import ru.ifmo.torrent.client.state.PartsManager;
-import ru.ifmo.torrent.client.state.LocalFileReference;
-import ru.ifmo.torrent.client.state.SourcesUpdater;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.ifmo.torrent.client.leech.Downloader;
+import ru.ifmo.torrent.client.seed.Seeder;
+import ru.ifmo.torrent.client.storage.*;
 import ru.ifmo.torrent.messages.client_tracker.requests.*;
 import ru.ifmo.torrent.messages.client_tracker.response.*;
 import ru.ifmo.torrent.messages.Request;
 import ru.ifmo.torrent.messages.Response;
 import ru.ifmo.torrent.tracker.state.FileInfo;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
+import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -20,28 +22,35 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Client implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+
     private static final int TRACKER_PORT = 8081;
 
     private LocalFilesManager localFilesManager;
-    private PartsManager partsManager;
 
-    private Socket clientSocket;
     private InetAddress inetAddress;
-    private short port;
-//    private Seed seed;
+    private Downloader downloader;
+    private Seeder seeder;
     private final SourcesUpdater sourcesUpdater;
 
     public Client(InetAddress inetAddress, short port) throws IOException {
 //        this.inetAddress = InetAddress.getByName("192.168.211.41");
         this.inetAddress = inetAddress;
-        this.port = port;
 
         localFilesManager = new LocalFilesManager(ClientConfig.getLocalFilesFile());
-        partsManager = new PartsManager(ClientConfig.getLocalFilesStorage());
+        localFilesManager.restoreFromFile();
         sourcesUpdater = new SourcesUpdater(this, localFilesManager, port);
+
+        this.downloader = new Downloader(localFilesManager, this);
+        Thread downloaderTread = new Thread(downloader);
+        downloaderTread.start();
+
+        this.seeder = new Seeder(port, localFilesManager);
+        Thread seedTread = new Thread(seeder);
+        seedTread.start();
+
     }
 
     public Response sendRequest(Request request) throws IOException {
@@ -64,11 +73,11 @@ public class Client implements AutoCloseable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() throws IOException, TorrentException {
         localFilesManager.storeToFile();
-//        seed.close();
+        downloader.close();
         sourcesUpdater.close();
-//        clientSocket.close();
+        seeder.close();
     }
 
     public List<FileInfo> getAvailableFiles() throws IOException {
@@ -97,17 +106,8 @@ public class Client implements AutoCloseable {
         return response.getClients();
     }
 
-    public boolean update() throws IOException {
-        List<Integer> fileIds = localFilesManager.getFiles().stream()
-            .filter( f -> f.getReadyParts().size() != 0)
-            .map(LocalFileReference::getFileId).collect(Collectors.toList());
-        UpdateRequest request = new UpdateRequest((short) clientSocket.getPort(), fileIds);
-        UpdateResponse response = (UpdateResponse) sendRequest(request);
-        return response.getResult();
-    }
-
     public void downloadFile(int fileId) throws IOException {
-        if(partsManager.fileIsPresent(fileId)) {
+        if(localFilesManager.getPartsManager().fileIsPresent(fileId)) {
             throw new IllegalArgumentException("file with id " + fileId + " already added as local file");
         }
 
@@ -119,7 +119,6 @@ public class Client implements AutoCloseable {
         );
 
         localFilesManager.addNotDownloadedFile(fileInfo.getName(), fileInfo.getId(), fileInfo.getSize());
-
     }
 
     List<LocalFileReference> getLocalFiles() {

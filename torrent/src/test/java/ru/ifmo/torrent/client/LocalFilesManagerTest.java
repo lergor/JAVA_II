@@ -3,8 +3,8 @@ package ru.ifmo.torrent.client;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import ru.ifmo.torrent.client.state.LocalFilesManager;
-import ru.ifmo.torrent.client.state.LocalFileReference;
+import ru.ifmo.torrent.client.storage.LocalFilesManager;
+import ru.ifmo.torrent.client.storage.LocalFileReference;
 
 import java.io.IOException;
 
