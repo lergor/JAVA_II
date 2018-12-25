@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.stream.Collectors;
 
 public class Downloader implements Runnable, AutoCloseable {
@@ -66,7 +67,11 @@ public class Downloader implements Runnable, AutoCloseable {
 
     private void downloadPart(FilePart part, List<SeedInfo> sources) {
         if (!sources.isEmpty()) {
-            pool.submit(new DownloadTask(part, sources));
+            try {
+                pool.submit(new DownloadTask(part, sources));
+            } catch (RejectedExecutionException e) {
+                shouldExit = true;
+            }
         }
     }
 
@@ -74,7 +79,7 @@ public class Downloader implements Runnable, AutoCloseable {
     public void run() {
         while (!shouldExit) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(ClientConfig.DOWNLOAD_RATE_SEC * 1000);
             } catch (InterruptedException e) {
                 break;
             }
@@ -97,11 +102,11 @@ public class Downloader implements Runnable, AutoCloseable {
         @Override
         public void run() {
             try {
-            Optional<SeedInfo> maybeSource = getSource();
-            if (!maybeSource.isPresent()) return;
+                Optional<SeedInfo> maybeSource = getSource();
+                if (!maybeSource.isPresent()) return;
 
-            SeedInfo source = maybeSource.get();
-            Leecher leecher = new Leecher(source.getPort(), source.getInetAddress());
+                SeedInfo source = maybeSource.get();
+                Leecher leecher = new Leecher(source.getPort(), source.getInetAddress());
 
                 byte[] content = leecher.getPartContent(part.getFileId(), part.getPartNum());
 
@@ -110,22 +115,16 @@ public class Downloader implements Runnable, AutoCloseable {
                     out.flush();
                 }
 
+                filesManager.addReadyPartOfFile(part.getFileId(), part.getPartNum());
+                downloadingParts.remove(part);
+
             } catch (IOException e) {
+                System.err.printf("error while downloading file with id %d%n", part.getFileId());
                 e.printStackTrace();
-                return;
             } catch (TorrentException e) {
                 System.err.println(e.getMassage());
                 e.getException().printStackTrace();
-                return;
             }
-
-            try {
-                filesManager.addReadyPartOfFile(part.getFileId(), part.getPartNum());
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
-            downloadingParts.remove(part);
         }
 
         private Optional<SeedInfo> getSource() throws TorrentException {

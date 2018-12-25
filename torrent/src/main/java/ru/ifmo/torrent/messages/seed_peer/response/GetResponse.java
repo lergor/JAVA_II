@@ -1,25 +1,21 @@
 package ru.ifmo.torrent.messages.seed_peer.response;
 
 import org.apache.commons.io.IOUtils;
-import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.messages.Response;
 
 import java.io.*;
 
-
 public class GetResponse extends Response {
 
     private byte[] content;
+    private int size;
 
     public GetResponse() {}
 
-    public GetResponse(InputStream in) throws IOException {
-        this.content = new byte[ClientConfig.FILE_PART_SIZE];
+    public GetResponse(InputStream in, int size) throws IOException {
+        this.size = size;
+        this.content = new byte[size];
         in.read(content);
-    }
-
-    public GetResponse(byte[] content) {
-        this.content = content;
     }
 
     @Override
@@ -29,7 +25,7 @@ public class GetResponse extends Response {
 
     @Override
     public void read(DataInputStream in) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream(ClientConfig.FILE_PART_SIZE);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream(size);
         IOUtils.copy(in, buffer);
         content = buffer.toByteArray();
     }

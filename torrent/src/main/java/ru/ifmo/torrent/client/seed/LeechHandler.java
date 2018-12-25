@@ -28,48 +28,36 @@ class LeechHandler implements Runnable {
     @Override
     public void run() {
         try (Socket socket = leechSocket) {
-            DataInputStream in = new DataInputStream(leechSocket.getInputStream());
-            DataOutputStream out = new DataOutputStream(leechSocket.getOutputStream());
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             Response response = null;
-            int marker;
-            while ((marker = in.read()) != -1) {
-                switch (marker) {
-                    case Marker.GET: {
-                        GetRequest request = (GetRequest) Request.readFromDataInputStream(in, GetRequest.class);
-                        InputStream is = getPartForDownloading(request.getFileId(), request.getPart());
-                        response = new GetResponse(is);
-                        is.close();
-                        break;
-                    }
-                    case Marker.STAT: {
-                        StatRequest request = (StatRequest) StatRequest.readFromDataInputStream(in, StatRequest.class);
-                        response = new StatResponse(getParts(request.getFileId()));
-                        break;
-                    }
-                    default:
-                        break;
+            int marker = in.readByte();
+            switch (marker) {
+                case Marker.GET: {
+                    GetRequest request = (GetRequest) Request.readFromDataInputStream(in, GetRequest.class);
+                    InputStream is = getPartForDownloading(request.getFileId(), request.getPart());
+                    LocalFileReference reference = filesManager.getFileReference(request.getFileId());
+                    response = new GetResponse(is, reference.getBlockSizeForPart(request.getPart()));
+                    is.close();
+                    break;
                 }
-
-                if (response != null) {
-                    response.write(out);
-                    out.flush();
-
-                    // FIXME this is a hack to allow client to read part until -1
-                    // ideally client should know size of part he's reading
-                    // should handle one request in LeecherHandler
-                    if (response instanceof GetResponse) {
-                        break;
-                    }
+                case Marker.STAT: {
+                    StatRequest request = (StatRequest) StatRequest.readFromDataInputStream(in, StatRequest.class);
+                    response = new StatResponse(getParts(request.getFileId()));
+                    break;
                 }
+                default:
+                    break;
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
+            if (response != null) {
+                response.write(out);
+                out.flush();
+            }
+
+        } catch (IOException | IllegalAccessException | InstantiationException e) {
+            System.err.printf("error while service leech %s %d%n",  leechSocket.getInetAddress(), leechSocket.getPort());
         }
 
     }

@@ -96,4 +96,10 @@ public class LocalFilesManager implements StoredState {
         return partsManager;
     }
 
+    public void addFileToStorageAsParts(int fileId, Path file) throws IOException {
+        long size = Files.size(file);
+        LocalFileReference reference = LocalFileReference.createEmpty(file.getFileName().toString(), fileId, size, getPartsNumber(size));
+        partsManager.storeSplitted(reference, file);
+
+    }
 }

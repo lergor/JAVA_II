@@ -1,5 +1,7 @@
 package ru.ifmo.torrent.client.storage;
 
+import ru.ifmo.torrent.client.ClientConfig;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -11,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class LocalFileReference {
+
     private final int fileId;
     private final long size;
     private final int numberOfParts;
@@ -91,4 +94,10 @@ public class LocalFileReference {
             .filter(i -> !readyParts.contains(i))
             .collect(Collectors.toList());
     }
+
+    public int getBlockSizeForPart(int part) {
+        int fullPartSize = ClientConfig.FILE_PART_SIZE;
+        return (part + 1) < numberOfParts ? fullPartSize : (int) (size - (numberOfParts - 1) * fullPartSize);
+    }
+
 }

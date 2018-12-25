@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Client implements AutoCloseable {
 
@@ -84,7 +85,7 @@ public class Client implements AutoCloseable {
         }
         UploadRequest request = new UploadRequest(file);
         UploadResponse response = (UploadResponse) sendRequest(request);
-        localFilesManager.getPartsManager().storeSplitted(response.getFileId(), file);
+        localFilesManager.addFileToStorageAsParts(response.getFileId(), file);
         localFilesManager.addLocalFile(file.getFileName().toString(), response.getFileId(), request.getFileSize());
         return response.getFileId();
     }
@@ -101,18 +102,23 @@ public class Client implements AutoCloseable {
         return response.getClients();
     }
 
-    public void downloadFile(int fileId) throws IOException, TorrentException {
+    public boolean downloadFile(int fileId) throws IOException, TorrentException {
         if (localFilesManager.getPartsManager().fileIsPresent(fileId)) {
-            throw new TorrentException("file with id " + fileId + " already added as local file");
+            System.err.println("file with id " + fileId + " already added as local file");
+            return false;
         }
 
-        FileInfo fileInfo = getAvailableFiles().stream()
+        Optional<FileInfo> fileInfo = getAvailableFiles().stream()
             .filter(f -> f.getId() == fileId)
-            .findFirst().orElseThrow(() ->
-                new TorrentException("File with id " + fileId + " does not exist!")
-            );
+            .findFirst();
 
-        localFilesManager.addNotDownloadedFile(fileInfo.getName(), fileInfo.getId(), fileInfo.getSize());
+        if(!fileInfo.isPresent()) {
+            System.err.println("File with id " + fileId + " does not exist!");
+            return false;
+        }
+        FileInfo file = fileInfo.get();
+        localFilesManager.addNotDownloadedFile(file.getName(), file.getId(), file.getSize());
+        return true;
     }
 
     List<LocalFileReference> getLocalFiles() {

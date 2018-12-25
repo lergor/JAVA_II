@@ -65,8 +65,9 @@ public class ClientApp {
                     }
                     case Command.DOWNLOAD: {
                         int fileId = scanner.nextInt();
-                        client.downloadFile(fileId);
-                        System.out.println("file with id " + fileId + " download");
+                        if(client.downloadFile(fileId)) {
+                            System.out.println("file with id " + fileId + " downloaded");
+                        }
                         break;
                     }
                     case Command.STATS: {

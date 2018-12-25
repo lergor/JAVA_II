@@ -24,16 +24,13 @@ public class PartsManager {
         }
     }
 
-    public void storeSplitted(int fileId, Path targetFile) throws IOException {
+    public void storeSplitted(LocalFileReference reference, Path targetFile) throws IOException {
         InputStream is = Files.newInputStream(targetFile);
-        int partNumber = 0;
-        byte[] buf = new byte[ClientConfig.FILE_PART_SIZE];
-        while (true) {
+        for (int i = 0; i < reference.getNumberOfParts(); i++) {
+            byte[] buf = new byte[reference.getBlockSizeForPart(i)];
             int readed = is.read(buf);
-            if (readed == -1) return;
-            try (OutputStream out = getForWriting(fileId, partNumber)) {
+            try (OutputStream out = getForWriting(reference.getFileId(), i)) {
                 out.write(buf, 0, readed);
-                partNumber++;
             }
         }
     }
