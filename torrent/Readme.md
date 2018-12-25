@@ -6,7 +6,13 @@ This repository contains simple torrent with tracker and client applications.
 
 ###How to run
 
-// TODO
+In order to run this app, follow this steps:
+
+* clone this repository
+* checkout on branch *torrent*
+* run `gradle trackerJar` and `gradle clientJar` to build jar for TrackerApp and ClientApp respectively
+* go to the `build/libs` directory
+* run ```java -jar trackerApp-jar-1.0-SNAPSHOT.jar``` and ```java -jar clientApp-jar-1.0-SNAPSHOT.jar``` to run Tracker or Client respectively 
 
 ###Usage
 
