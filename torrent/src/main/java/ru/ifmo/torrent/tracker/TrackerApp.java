@@ -10,7 +10,7 @@ public class TrackerApp {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        try (Tracker tracker = new Tracker(TrackerConfig.TRACKER_PORT)) {
+        try (Tracker tracker = new Tracker(TrackerConfig.TRACKER_PORT, TrackerConfig.getMetaDir())) {
             tracker.run();
             System.out.printf("tracker started at getPort %d%n", TrackerConfig.TRACKER_PORT);
             System.out.println("enter 'exit' to shutdown tracker");

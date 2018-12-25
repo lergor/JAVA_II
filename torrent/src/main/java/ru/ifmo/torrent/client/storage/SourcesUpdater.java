@@ -34,7 +34,9 @@ public class SourcesUpdater implements AutoCloseable {
             .collect(Collectors.toList());
 
         try {
-            client.sendRequest(new UpdateRequest(clientPort, fileIds));
+            if(!fileIds.isEmpty()) {
+                client.sendRequest(new UpdateRequest(clientPort, fileIds));
+            }
         } catch (IOException | TorrentException ignored) {
         }
     }

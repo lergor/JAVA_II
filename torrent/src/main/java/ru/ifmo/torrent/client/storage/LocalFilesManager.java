@@ -17,13 +17,16 @@ public class LocalFilesManager implements StoredState {
     private ConcurrentHashMap<Integer, LocalFileReference> localFiles = new ConcurrentHashMap<>();
     private PartsManager partsManager;
     private final Path metaFile;
+    private final Path downloadDir;
 
-    public LocalFilesManager(Path metaFile) throws IOException, TorrentException {
+    public LocalFilesManager(Path downloadDir, Path metaFile, Path partsStorage) throws IOException, TorrentException {
         this.metaFile = metaFile;
+        this.downloadDir = downloadDir;
         if (Files.notExists(metaFile)) {
+            metaFile.getParent().toFile().mkdirs();
             Files.createFile(metaFile);
         }
-        partsManager = new PartsManager(ClientConfig.getLocalFilesStorage());
+        partsManager = new PartsManager(partsStorage);
         restoreFromFile();
     }
 
@@ -43,7 +46,7 @@ public class LocalFilesManager implements StoredState {
             LocalFileReference reference = localFiles.get(fileId);
             String fileName = reference.getName();
             long fileSize = reference.getSize();
-            partsManager.mergeSplitted(fileId, fileSize, ClientConfig.TORRENT_DIR.resolve(fileName));
+            partsManager.mergeSplitted(fileId, fileSize, downloadDir.resolve(fileName));
         }
     }
 

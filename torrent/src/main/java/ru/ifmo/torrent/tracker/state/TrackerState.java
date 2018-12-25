@@ -28,6 +28,7 @@ public class TrackerState implements StoredState {
     public TrackerState(Path metaFile) throws TorrentException, IOException {
         this.metaFile = metaFile;
         if (Files.notExists(metaFile)) {
+            metaFile.getParent().toFile().mkdirs();
             Files.createFile(metaFile);
         }
         pool = Executors.newScheduledThreadPool(1);

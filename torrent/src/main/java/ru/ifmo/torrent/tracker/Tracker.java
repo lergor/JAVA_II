@@ -6,6 +6,7 @@ import ru.ifmo.torrent.util.TorrentException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,8 +16,8 @@ public class Tracker implements AutoCloseable, Runnable {
     private final TrackerState state;
     private final ServerSocket serverSocket;
 
-    public Tracker(short port) throws TorrentException, IOException {
-        state = new TrackerState(TrackerConfig.getTrackerStateFile());
+    public Tracker(short port, Path metaDir) throws TorrentException, IOException {
+        state = new TrackerState(metaDir.resolve(TrackerConfig.TRACKER_STATE_FILE));
 
         try {
             serverSocket = new ServerSocket(port);

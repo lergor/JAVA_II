@@ -30,9 +30,9 @@ public class Client implements AutoCloseable {
     private Seeder seeder;
     private final SourcesUpdater sourcesUpdater;
 
-    public Client(InetAddress inetAddress, short port) throws IOException, TorrentException {
+    public Client(InetAddress inetAddress, short port, Path metaDir, Path downloadDir) throws IOException, TorrentException {
         this.inetAddress = inetAddress;
-        localFilesManager = new LocalFilesManager(ClientConfig.getLocalFilesFile());
+        localFilesManager = new LocalFilesManager(downloadDir, metaDir.resolve(ClientConfig.LOCAL_FILES_FILE), metaDir.resolve(ClientConfig.PARTS_STORAGE));
         sourcesUpdater = new SourcesUpdater(this, localFilesManager, port);
 
         this.downloader = new Downloader(localFilesManager, this);

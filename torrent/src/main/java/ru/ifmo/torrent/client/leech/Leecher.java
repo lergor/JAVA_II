@@ -2,10 +2,8 @@ package ru.ifmo.torrent.client.leech;
 
 import ru.ifmo.torrent.messages.Request;
 import ru.ifmo.torrent.messages.Response;
-import ru.ifmo.torrent.messages.seed_peer.requests.GetRequest;
-import ru.ifmo.torrent.messages.seed_peer.requests.StatRequest;
-import ru.ifmo.torrent.messages.seed_peer.response.GetResponse;
-import ru.ifmo.torrent.messages.seed_peer.response.StatResponse;
+import ru.ifmo.torrent.messages.seed_peer.requests.*;
+import ru.ifmo.torrent.messages.seed_peer.response.*;
 import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.DataInputStream;

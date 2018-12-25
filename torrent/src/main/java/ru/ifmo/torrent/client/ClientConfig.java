@@ -27,12 +27,4 @@ public class ClientConfig extends Config {
         return storage;
     }
 
-    public static Path getLocalFilesStorage() {
-        return getMetaDir().resolve(PARTS_STORAGE);
-    }
-
-    public static Path getLocalFilesFile() {
-        return getMetaDir().resolve(LOCAL_FILES_FILE);
-    }
-
 }

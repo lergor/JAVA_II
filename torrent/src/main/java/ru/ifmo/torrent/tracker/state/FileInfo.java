@@ -3,6 +3,7 @@ package ru.ifmo.torrent.tracker.state;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 public class FileInfo {
 
@@ -39,5 +40,20 @@ public class FileInfo {
         out.writeInt(id);
         out.writeUTF(name);
         out.writeLong(size);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FileInfo fileInfo = (FileInfo) o;
+        return id == fileInfo.id &&
+            size == fileInfo.size &&
+            Objects.equals(name, fileInfo.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, size);
     }
 }

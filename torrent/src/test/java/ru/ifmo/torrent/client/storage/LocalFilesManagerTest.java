@@ -25,13 +25,13 @@ public class LocalFilesManagerTest {
 
     @Test
     public void testEmptyState() throws IOException, TorrentException {
-        LocalFilesManager state = new LocalFilesManager(folder.getRoot().toPath());
+        LocalFilesManager state = new LocalFilesManager(folder.newFolder().toPath(), folder.newFile().toPath(), folder.newFolder().toPath());
         assertThat(state.getFiles()).isEmpty();
     }
 
     @Test
     public void testAddAndGet() throws IOException, TorrentException {
-        LocalFilesManager state = new LocalFilesManager(folder.getRoot().toPath());
+        LocalFilesManager state = new LocalFilesManager(folder.newFolder().toPath(), folder.newFile().toPath(), folder.newFolder().toPath());
         state.addLocalFile(name, id, size);
         testGetFile(state);
     }
@@ -39,13 +39,14 @@ public class LocalFilesManagerTest {
     @Test
     public void testAddAndContainsAfterReloading() throws IOException, TorrentException {
         Path metaFile = folder.newFile(ClientConfig.LOCAL_FILES_FILE).toPath();
-        LocalFilesManager storedState = new LocalFilesManager(metaFile);
+        Path partsDir = folder.newFolder(ClientConfig.PARTS_STORAGE).toPath();
+        LocalFilesManager storedState = new LocalFilesManager(folder.newFolder().toPath(), metaFile, partsDir);
 
         storedState.addLocalFile(name, id, size);
         testGetFile(storedState);
         storedState.storeToFile();
 
-        LocalFilesManager restoredState = new LocalFilesManager(metaFile);
+        LocalFilesManager restoredState = new LocalFilesManager(folder.newFolder().toPath(), metaFile, partsDir);
         restoredState.restoreFromFile();
         testGetFile(restoredState);
     }

@@ -5,8 +5,6 @@ import java.nio.file.Paths;
 
 public abstract class Config {
 
-    public static final int TIMEOUT = 5 * 1000;
-
     public static Path CWD = Paths.get(System.getProperty("user.dir")).normalize();
 
     public static final Path TORRENT_DIR = CWD.resolve("torrent");

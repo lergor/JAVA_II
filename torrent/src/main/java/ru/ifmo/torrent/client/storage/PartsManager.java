@@ -1,7 +1,5 @@
 package ru.ifmo.torrent.client.storage;
 
-import ru.ifmo.torrent.client.ClientConfig;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

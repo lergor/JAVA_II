@@ -7,6 +7,7 @@ import java.nio.file.Path;
 
 public class TrackerConfig extends Config {
 
+    public static final int TIMEOUT = 5 * 1000;
     public static final short TRACKER_PORT = 8081;
     public static final int THREADS_COUNT = 8;
     public static final int UPDATE_RATE_SEC = 180;
@@ -22,10 +23,5 @@ public class TrackerConfig extends Config {
             storage.toFile().mkdirs();
         }
         return storage;
-    }
-
-    public static Path getTrackerStateFile() {
-        Path storage = getMetaDir();
-        return storage.resolve(TRACKER_STATE_FILE);
     }
 }

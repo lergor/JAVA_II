@@ -18,10 +18,10 @@ public class ClientApp {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print("enter client getPort: ");
+        System.out.print("enter client port: ");
         Short port = getPort(args, scanner);
 
-        try (Client client = new Client(InetAddress.getLocalHost(), port)) {
+        try (Client client = new Client(InetAddress.getLocalHost(), port, ClientConfig.getMetaDir(), ClientConfig.TORRENT_DIR)) {
             System.out.printf("client started at getPort %d%n", port);
             printUsage();
             main_while:
