@@ -6,7 +6,7 @@ This repository contains simple torrent with tracker and client applications.
 
 ### How to run
 
-In order to run this app, follow this steps:
+In order to run this app, follow these steps:
 
 * clone this repository
 * checkout on branch *torrent*
