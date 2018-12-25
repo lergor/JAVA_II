@@ -32,9 +32,7 @@ public class Client implements AutoCloseable {
 
     public Client(InetAddress inetAddress, short port) throws IOException, TorrentException {
         this.inetAddress = inetAddress;
-
         localFilesManager = new LocalFilesManager(ClientConfig.getLocalFilesFile());
-        localFilesManager.restoreFromFile();
         sourcesUpdater = new SourcesUpdater(this, localFilesManager, port);
 
         this.downloader = new Downloader(localFilesManager, this);

@@ -18,12 +18,13 @@ public class LocalFilesManager implements StoredState {
     private PartsManager partsManager;
     private final Path metaFile;
 
-    public LocalFilesManager(Path metaFile) throws IOException {
+    public LocalFilesManager(Path metaFile) throws IOException, TorrentException {
         this.metaFile = metaFile;
         if (Files.notExists(metaFile)) {
             Files.createFile(metaFile);
         }
         partsManager = new PartsManager(ClientConfig.getLocalFilesStorage());
+        restoreFromFile();
     }
 
     public void addLocalFile(String name, int fileId, long size) {

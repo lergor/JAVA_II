@@ -1,13 +1,15 @@
-package ru.ifmo.torrent.client;
+package ru.ifmo.torrent.client.storage;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.client.storage.LocalFilesManager;
 import ru.ifmo.torrent.client.storage.LocalFileReference;
 import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,13 +24,13 @@ public class LocalFilesManagerTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void testEmptyState() throws IOException {
+    public void testEmptyState() throws IOException, TorrentException {
         LocalFilesManager state = new LocalFilesManager(folder.getRoot().toPath());
         assertThat(state.getFiles()).isEmpty();
     }
 
     @Test
-    public void testAddAndGet() throws IOException {
+    public void testAddAndGet() throws IOException, TorrentException {
         LocalFilesManager state = new LocalFilesManager(folder.getRoot().toPath());
         state.addLocalFile(name, id, size);
         testGetFile(state);
@@ -36,15 +38,15 @@ public class LocalFilesManagerTest {
 
     @Test
     public void testAddAndContainsAfterReloading() throws IOException, TorrentException {
-        LocalFilesManager storedState = new LocalFilesManager(folder.getRoot().toPath());
+        Path metaFile = folder.newFile(ClientConfig.LOCAL_FILES_FILE).toPath();
+        LocalFilesManager storedState = new LocalFilesManager(metaFile);
 
         storedState.addLocalFile(name, id, size);
         testGetFile(storedState);
         storedState.storeToFile();
 
-        LocalFilesManager restoredState = new LocalFilesManager(folder.getRoot().toPath());
+        LocalFilesManager restoredState = new LocalFilesManager(metaFile);
         restoredState.restoreFromFile();
-
         testGetFile(restoredState);
     }
 

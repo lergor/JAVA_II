@@ -13,10 +13,10 @@ public class TrackerApp {
         try (Tracker tracker = new Tracker(TrackerConfig.TRACKER_PORT)) {
             tracker.run();
             System.out.printf("tracker started at getPort %d%n", TrackerConfig.TRACKER_PORT);
-            System.out.println("enter 'stop' to stop tracker");
+            System.out.println("enter 'exit' to shutdown tracker");
             while (scanner.hasNext()) {
                 String command = scanner.next();
-                if (command.equals("stop")) {
+                if (command.equals("exit")) {
                     System.out.println("shutting down tracker");
                     break;
                 }

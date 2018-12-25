@@ -17,9 +17,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class TrackerStateTest {
 
     private final List<FileInfo> files = Arrays.asList(
-        new FileInfo(0, "file_1", 1),
-        new FileInfo(1, "file_2", 100),
-        new FileInfo(2, "file_3", 17)
+        new FileInfo(1, "file_1", 1),
+        new FileInfo(2, "file_2", 100),
+        new FileInfo(3, "file_3", 17)
     );
 
     @Rule
@@ -37,7 +37,6 @@ public class TrackerStateTest {
         storedState.storeToFile();
 
         TrackerState restoredState = new TrackerState(file);
-        restoredState.restoreFromFile();
         List<FileInfo> restoredFiles = restoredState.getAvailableFiles();
 
         assertThat(files.size()).isEqualTo(restoredFiles.size());
@@ -53,10 +52,12 @@ public class TrackerStateTest {
         Path file = createMetaFile();
         TrackerState state = new TrackerState(file);
         assertTrue(state.getAvailableFiles().isEmpty());
+
         String fileName = "kek";
         long fileSize = 17;
         int ID = state.addFile(fileName, fileSize);
         assertThat(state.getAvailableFiles().size()).isEqualTo(1);
+
         FileInfo addedFile = state.getAvailableFiles().get(0);
         assertThat(addedFile.getId()).isEqualTo(ID);
         assertThat(addedFile.getName()).isEqualTo(fileName);

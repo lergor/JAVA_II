@@ -1,10 +1,11 @@
-package ru.ifmo.torrent.client;
+package ru.ifmo.torrent.client.storage;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import ru.ifmo.torrent.client.storage.LocalFileReference;
 import ru.ifmo.torrent.client.storage.PartsManager;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class StorageManagerTest {
+public class PartsManagerTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -28,7 +29,8 @@ public class StorageManagerTest {
         PartsManager partsManager = new PartsManager(folder.getRoot().toPath());
 
         int id = 0;
-        partsManager.storeSplitted(id, file);
+        LocalFileReference reference = LocalFileReference.createEmpty(file.getFileName().toString(), 0, Files.size(file), 1);
+        partsManager.storeSplitted(reference, file);
         String storedContent = IOUtils.toString(partsManager.getForReading(id,0));
         assertThat(storedContent).isEqualTo(content);
     }
@@ -37,7 +39,6 @@ public class StorageManagerTest {
     public void testMergeParts() throws IOException {
         Path fileDir = folder.newFolder("0").toPath();
         PartsManager partsManager = new PartsManager(folder.getRoot().toPath());
-        List<Integer> partsNum = Arrays.asList(0, 1, 2);
         List<Path> files = Arrays.asList(
             Files.createFile(fileDir.resolve("0")),
             Files.createFile(fileDir.resolve("1")),
@@ -54,6 +55,5 @@ public class StorageManagerTest {
 
         String storedContent = FileUtils.readFileToString(mergedFile.toFile());
         assertThat(storedContent).isEqualTo("content1content2content3");
-        System.out.println(Files.size(mergedFile));
     }
 }
