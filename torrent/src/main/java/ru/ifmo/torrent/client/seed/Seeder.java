@@ -1,5 +1,6 @@
 package ru.ifmo.torrent.client.seed;
 
+import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.client.storage.LocalFilesManager;
 import ru.ifmo.torrent.util.TorrentException;
 
@@ -13,7 +14,7 @@ public class Seeder implements Runnable, AutoCloseable {
 
     private final LocalFilesManager filesManager;
     private final ServerSocket socket;
-    private final ExecutorService threadPool = Executors.newFixedThreadPool(4);
+    private final ExecutorService pool = Executors.newFixedThreadPool(ClientConfig.SEED_THREADS_COUNT);
 
 
     public Seeder(short port, LocalFilesManager filesManager) throws IOException {
@@ -25,11 +26,11 @@ public class Seeder implements Runnable, AutoCloseable {
         try (ServerSocket socket = this.socket) {
             while (true) {
                 Socket leecherSocket = socket.accept();
-                threadPool.submit(new LeechHandler(leecherSocket, filesManager));
+                pool.submit(new LeechHandler(leecherSocket, filesManager));
             }
         } catch (IOException e) {
             if(!socket.isClosed()) {
-                throw new IllegalStateException("cannot close seed socket\n" + e.getMessage());
+                throw new IllegalStateException("cannot open seed socket", e);
             }
         }
     }
@@ -39,9 +40,9 @@ public class Seeder implements Runnable, AutoCloseable {
         try {
             socket.close();
         } catch (IOException e) {
-            throw new TorrentException("seed: cannot close socket", e);
+            throw new TorrentException("cannot close seed socket properly", e);
         } finally {
-            threadPool.shutdown();
+            pool.shutdown();
         }
     }
 }

@@ -39,8 +39,8 @@ public class UpdateRequest extends Request {
         out.writeByte(marker());
         out.writeShort(clientPort);
         out.writeInt(fileIds.size());
-        for (Integer ID : fileIds) {
-            out.writeInt(ID);
+        for (Integer id : fileIds) {
+            out.writeInt(id);
         }
     }
 
@@ -49,8 +49,8 @@ public class UpdateRequest extends Request {
         clientPort = in.readShort();
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
-            int fileID = in.readInt();
-            fileIds.add(fileID);
+            int fileId = in.readInt();
+            fileIds.add(fileId);
         }
     }
 
@@ -62,9 +62,4 @@ public class UpdateRequest extends Request {
         return fileIds;
     }
 
-    public static UpdateRequest readFromDataInputStream(DataInputStream in) throws IOException {
-        UpdateRequest request = new UpdateRequest();
-        request.read(in);
-        return request;
-    }
 }

@@ -23,17 +23,17 @@ public class ResponseTests {
     private ByteArrayOutputStream baos = new ByteArrayOutputStream();
     private DataOutputStream out = new DataOutputStream(baos);
 
-    @Test
-    public void testGetResponse() throws IOException {
-        File file = folder.newFile();
-        FileUtils.writeStringToFile(file, "contentcontentcontentcontent");
-
-        GetResponse sentResponse = new GetResponse(Files.newOutputStream(file.toPath()));
-        GetResponse acceptedResponse = new GetResponse();
-        sendAndAccept(sentResponse, acceptedResponse);
-
-        assertThat(acceptedResponse.getContent()).isEqualTo(sentResponse.getContent());
-    }
+//    @Test
+//    public void testGetResponse() throws IOException {
+//        File file = folder.newFile();
+//        FileUtils.writeStringToFile(file, "contentcontentcontentcontent");
+//
+//        GetResponse sentResponse = new GetResponse(Files.newOutputStream(file.toPath()));
+//        GetResponse acceptedResponse = new GetResponse();
+//        sendAndAccept(sentResponse, acceptedResponse);
+//
+//        assertThat(acceptedResponse.getContent()).isEqualTo(sentResponse.getContent());
+//    }
 
     @Test
     public void testStatResponse() throws IOException {

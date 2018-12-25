@@ -7,26 +7,28 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class UploadResponse extends Response {
-    private int fileID;
+
+    private int fileId;
 
     public UploadResponse() {
     }
 
-    public UploadResponse(int fileID) {
-        this.fileID = fileID;
+    public UploadResponse(int fileId) {
+        this.fileId = fileId;
     }
 
     @Override
     public void write(DataOutputStream out) throws IOException {
-        out.writeInt(fileID);
+        out.writeInt(fileId);
     }
 
     @Override
     public void read(DataInputStream in) throws IOException {
-        fileID = in.readInt();
+        fileId = in.readInt();
     }
 
-    public int getFileID() {
-        return fileID;
+    public int getFileId() {
+        return fileId;
     }
+
 }

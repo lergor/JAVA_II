@@ -12,7 +12,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,21 +40,21 @@ public class ClientHandler implements Runnable {
                         response = new ListResponse(trackerState.getAvailableFiles());
                         break;
                     case Marker.SOURCES: {
-                        SourcesRequest request = SourcesRequest.readFromDataInputStream(in);
+                        SourcesRequest request = (SourcesRequest) SourcesRequest.readFromDataInputStream(in, SourcesRequest.class);
                         int fileId = request.getFileId();
                         response = new SourcesResponse(fileId, trackerState.getSources(fileId));
                         break;
                     }
                     case Marker.UPDATE: {
-                        UpdateRequest request = UpdateRequest.readFromDataInputStream(in);
+                        UpdateRequest request = (UpdateRequest) UpdateRequest.readFromDataInputStream(in, UpdateRequest.class);
                         InetAddress address = InetAddress.getByName(clientSocket.getInetAddress().getHostAddress());
                         SeedInfo newSeed = new SeedInfo(request.getClientPort(), address);
                         boolean success = update(request.getFileIds(), newSeed);
-                        response =  new UpdateResponse(success);
+                        response = new UpdateResponse(success);
                         break;
                     }
                     case Marker.UPLOAD: {
-                        UploadRequest request = UploadRequest.readFromDataInputStream(in);
+                        UploadRequest request = (UploadRequest) UploadRequest.readFromDataInputStream(in, UploadRequest.class);
                         int fileId = trackerState.addFile(request.getFileName(), request.getFileSize());
                         response = new UploadResponse(fileId);
                         break;
@@ -63,13 +62,13 @@ public class ClientHandler implements Runnable {
                     default:
                         break;
                 }
-                if(response != null) {
+                if (response != null) {
                     response.write(out);
                     out.flush();
                 }
             }
-        }  catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new IllegalStateException("error on tracker acquired", e);
         }
     }
 
@@ -77,12 +76,10 @@ public class ClientHandler implements Runnable {
         Set<Integer> allFiles = trackerState.getAvailableFiles().stream()
             .map(FileInfo::getId)
             .collect(Collectors.toSet());
-        if (!allFiles.containsAll(fileIds)) {
-            return false;
-        }
-        for (int ID : fileIds) {
-            trackerState.addNewSeedIfAbsent(ID, newSeed);
-        }
+
+        if (!allFiles.containsAll(fileIds)) return false;
+
+        fileIds.forEach(id -> trackerState.addNewSeedIfAbsent(id, newSeed));
         return true;
     }
 }

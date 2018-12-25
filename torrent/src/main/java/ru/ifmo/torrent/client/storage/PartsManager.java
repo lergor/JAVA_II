@@ -5,6 +5,7 @@ import ru.ifmo.torrent.client.ClientConfig;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -29,22 +30,24 @@ public class PartsManager {
         byte[] buf = new byte[ClientConfig.FILE_PART_SIZE];
         while (true) {
             int readed = is.read(buf);
-            if(readed == -1) return;
-            try(OutputStream out = getForWriting(fileId, partNumber)) {
+            if (readed == -1) return;
+            try (OutputStream out = getForWriting(fileId, partNumber)) {
                 out.write(buf, 0, readed);
                 partNumber++;
             }
         }
     }
 
-    public void mergeSplitted(int fileId, Path targetFile) throws IOException {
+    public void mergeSplitted(int fileId, long size, Path targetFile) throws IOException {
         Path fileDir = storage.resolve(String.valueOf(fileId));
         List<Path> parts = Files.list(fileDir)
             .sorted(Comparator.comparing(this::parsePartName))
             .collect(Collectors.toList());
         if (Files.notExists(targetFile)) {
             Files.createDirectories(targetFile.getParent());
-            Files.createFile(targetFile);
+            try (RandomAccessFile randomAccessFile = new RandomAccessFile(targetFile.toFile(), "rw")) {
+                randomAccessFile.setLength(size);
+            }
         }
         OutputStream out = Files.newOutputStream(targetFile, StandardOpenOption.TRUNCATE_EXISTING);
         for (Path p: parts) {

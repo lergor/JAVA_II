@@ -2,6 +2,7 @@ package ru.ifmo.torrent.tracker;
 
 import ru.ifmo.torrent.util.TorrentException;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class TrackerApp {
@@ -11,6 +12,7 @@ public class TrackerApp {
 
         try (Tracker tracker = new Tracker(TrackerConfig.TRACKER_PORT)) {
             tracker.run();
+            System.out.printf("tracker started at getPort %d%n", TrackerConfig.TRACKER_PORT);
             System.out.println("enter 'stop' to stop tracker");
             while (scanner.hasNext()) {
                 String command = scanner.next();
@@ -21,8 +23,8 @@ public class TrackerApp {
             }
         } catch (TorrentException e) {
             System.out.println(e.getMassage());
-            if(e.getException() != null) e.printStackTrace();
-        } catch (Exception e) {
+            if(e.getException() != null) e.getException().printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

@@ -4,6 +4,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.ifmo.torrent.tracker.TrackerConfig;
+import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,7 +30,7 @@ public class TrackerStateTest {
     }
 
     @Test
-    public void testStoringAndRestoringState() throws IOException {
+    public void testStoringAndRestoringState() throws IOException, TorrentException {
         Path file = createMetaFile();
         TrackerState storedState = new TrackerState(file);
         files.forEach(f -> storedState.addFile(f.getName(), f.getSize()));
@@ -48,7 +49,7 @@ public class TrackerStateTest {
     }
 
     @Test
-    public void addAndContainsFileTest() throws IOException {
+    public void addAndContainsFileTest() throws IOException, TorrentException {
         Path file = createMetaFile();
         TrackerState state = new TrackerState(file);
         assertTrue(state.getAvailableFiles().isEmpty());

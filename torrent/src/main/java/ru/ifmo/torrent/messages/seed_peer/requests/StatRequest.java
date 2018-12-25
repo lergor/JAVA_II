@@ -10,13 +10,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class StatRequest extends Request {
-    private int fileID;
+    private int fileId;
 
     public StatRequest() {
     }
 
-    public StatRequest(int fileID) {
-        this.fileID = fileID;
+    public StatRequest(int fileId) {
+        this.fileId = fileId;
     }
 
     @Override
@@ -32,21 +32,16 @@ public class StatRequest extends Request {
     @Override
     public void write(DataOutputStream out) throws IOException {
         out.writeByte(marker());
-        out.writeInt(fileID);
+        out.writeInt(fileId);
     }
 
     @Override
     public void read(DataInputStream in) throws IOException {
-        fileID = in.readInt();
+        fileId = in.readInt();
     }
 
-    public int getFileID() {
-        return fileID;
+    public int getFileId() {
+        return fileId;
     }
 
-    public static StatRequest readFromDataInputStream(DataInputStream in) throws IOException {
-        StatRequest request = new StatRequest();
-        request.read(in);
-        return request;
-    }
 }

@@ -9,11 +9,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-
 public class ListRequest extends Request {
 
-    public ListRequest() {
-    }
+    public ListRequest() {}
 
     @Override
     public byte marker() {
@@ -31,7 +29,6 @@ public class ListRequest extends Request {
     }
 
     @Override
-    public void read(DataInputStream in) {
-    }
+    public void read(DataInputStream in) {}
 
 }

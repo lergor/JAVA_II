@@ -1,9 +1,11 @@
 package ru.ifmo.torrent.client.leech;
 
 import ru.ifmo.torrent.client.Client;
+import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.client.storage.LocalFilesManager;
 import ru.ifmo.torrent.client.storage.PartsManager;
 import ru.ifmo.torrent.tracker.state.SeedInfo;
+import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class Downloader implements Runnable, AutoCloseable {
 
-    private final int DOWNLOADS_LIMIT = 5;
+    private static final int DOWNLOADS_LIMIT = ClientConfig.DOWNLOADS_LIMIT;
 
     private final ExecutorService pool = Executors.newFixedThreadPool(DOWNLOADS_LIMIT);
     private final LocalFilesManager filesManager;
@@ -53,7 +55,11 @@ public class Downloader implements Runnable, AutoCloseable {
     private Map<Integer, List<SeedInfo>> getSourcesForFiles(Set<Integer> fileIds) {
         Map<Integer, List<SeedInfo>> sources = new HashMap<>();
         for (Integer fileId : fileIds) {
-            sources.put(fileId, client.getFileSources(fileId));
+            try {
+                sources.put(fileId, client.getFileSources(fileId));
+            } catch (TorrentException e) {
+                e.printStackTrace();
+            }
         }
         return sources;
     }
@@ -90,12 +96,13 @@ public class Downloader implements Runnable, AutoCloseable {
 
         @Override
         public void run() {
+            try {
             Optional<SeedInfo> maybeSource = getSource();
             if (!maybeSource.isPresent()) return;
 
             SeedInfo source = maybeSource.get();
-            Leecher leecher = new Leecher(source.port(), source.inetAddress());
-            try {
+            Leecher leecher = new Leecher(source.getPort(), source.getInetAddress());
+
                 byte[] content = leecher.getPartContent(part.getFileId(), part.getPartNum());
 
                 try (OutputStream out = partsManager.getForWriting(part.getFileId(), part.getPartNum())) {
@@ -105,6 +112,10 @@ public class Downloader implements Runnable, AutoCloseable {
 
             } catch (IOException e) {
                 e.printStackTrace();
+                return;
+            } catch (TorrentException e) {
+                System.err.println(e.getMassage());
+                e.getException().printStackTrace();
                 return;
             }
 
@@ -117,9 +128,9 @@ public class Downloader implements Runnable, AutoCloseable {
             downloadingParts.remove(part);
         }
 
-        private Optional<SeedInfo> getSource() {
+        private Optional<SeedInfo> getSource() throws TorrentException {
             for (SeedInfo s : sources) {
-                Leecher leecher = new Leecher(s.port(), s.inetAddress());
+                Leecher leecher = new Leecher(s.getPort(), s.getInetAddress());
                 List<Integer> availableParts = leecher.getAvailableParts(part.getFileId());
                 if (availableParts.contains(part.getPartNum())) {
                     return Optional.of(s);
@@ -129,34 +140,4 @@ public class Downloader implements Runnable, AutoCloseable {
         }
     }
 
-    private class FilePart {
-        private final int fileId;
-        private final int num;
-
-        public FilePart(int fileId, int partNum) {
-            this.fileId = fileId;
-            this.num = partNum;
-        }
-
-        public int getFileId() {
-            return fileId;
-        }
-
-        public int getPartNum() {
-            return num;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            FilePart filePart = (FilePart) o;
-            return fileId == filePart.fileId && num == filePart.num;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(fileId, num);
-        }
-    }
 }

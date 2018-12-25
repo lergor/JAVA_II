@@ -54,8 +54,8 @@ public class ResponseTests {
         assertThat(acceptedResponse.getClients().size()).isEqualTo(seeds.size());
         for (int i = 0; i < seeds.size(); i++) {
             SeedInfo s = acceptedResponse.getClients().get(i);
-            assertThat(s.inetAddress()).isEqualTo(seeds.get(i).inetAddress());
-            assertThat(s.port()).isEqualTo(seeds.get(i).port());
+            assertThat(s.getInetAddress()).isEqualTo(seeds.get(i).getInetAddress());
+            assertThat(s.getPort()).isEqualTo(seeds.get(i).getPort());
         }
     }
 
@@ -76,7 +76,7 @@ public class ResponseTests {
 
         sendAndAccept(sentResponse, acceptedResponse);
 
-        assertThat(acceptedResponse.getFileID()).isEqualTo(sentResponse.getFileID());
+        assertThat(acceptedResponse.getFileId()).isEqualTo(sentResponse.getFileId());
     }
 
     private void sendAndAccept(Response sentResponse, Response acceptedResponse) throws IOException {

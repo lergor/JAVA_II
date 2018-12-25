@@ -23,16 +23,13 @@ import java.util.List;
 
 public class Client implements AutoCloseable {
 
-    private static final int TRACKER_PORT = 8081;
-
-    private LocalFilesManager localFilesManager;
-
     private InetAddress inetAddress;
+    private LocalFilesManager localFilesManager;
     private Downloader downloader;
     private Seeder seeder;
     private final SourcesUpdater sourcesUpdater;
 
-    public Client(InetAddress inetAddress, short port) throws IOException {
+    public Client(InetAddress inetAddress, short port) throws IOException, TorrentException {
         this.inetAddress = inetAddress;
 
         localFilesManager = new LocalFilesManager(ClientConfig.getLocalFilesFile());
@@ -49,8 +46,8 @@ public class Client implements AutoCloseable {
 
     }
 
-    public Response sendRequest(Request request) throws IOException {
-        try(Socket clientSocket = new Socket(inetAddress, TRACKER_PORT)) {
+    public Response sendRequest(Request request) throws IOException, TorrentException {
+        try (Socket clientSocket = new Socket(inetAddress, ClientConfig.TRACKER_PORT)) {
             DataInputStream in = new DataInputStream(clientSocket.getInputStream());
             DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
 
@@ -61,7 +58,7 @@ public class Client implements AutoCloseable {
                 response = request.getEmptyResponse();
                 response.read(in);
             } catch (IOException e) {
-                throw new IllegalStateException("cannot send request " + request.getClass().getSimpleName(), e);
+                throw new TorrentException("cannot send request " + request.getClass().getSimpleName(), e);
             }
             return response;
         }
@@ -69,50 +66,51 @@ public class Client implements AutoCloseable {
     }
 
     @Override
-    public void close() throws IOException, TorrentException {
+    public void close() throws TorrentException {
         localFilesManager.storeToFile();
         downloader.close();
         sourcesUpdater.close();
         seeder.close();
     }
 
-    public List<FileInfo> getAvailableFiles() throws IOException {
+    public List<FileInfo> getAvailableFiles() throws IOException, TorrentException {
         ListResponse response = (ListResponse) sendRequest(new ListRequest());
         return response.getFiles();
     }
 
-    public int uploadFile(Path file) throws IOException {
-        if(Files.notExists(file)) {
-            throw new IllegalArgumentException("file '" + file + "' does not exists");
+    public int uploadFile(Path file) throws IOException, TorrentException {
+        if (Files.notExists(file)) {
+            throw new TorrentException("file '" + file + "' does not exists");
         }
         UploadRequest request = new UploadRequest(file);
         UploadResponse response = (UploadResponse) sendRequest(request);
-        localFilesManager.getPartsManager().storeSplitted(response.getFileID(), file);
-        localFilesManager.addLocalFile(file.getFileName().toString(), response.getFileID(), request.getFileSize());
-        return response.getFileID();
+        localFilesManager.getPartsManager().storeSplitted(response.getFileId(), file);
+        localFilesManager.addLocalFile(file.getFileName().toString(), response.getFileId(), request.getFileSize());
+        return response.getFileId();
     }
 
-    public List<SeedInfo> getFileSources(int fileId) {
-        SourcesResponse response = null;
+    public List<SeedInfo> getFileSources(int fileId) throws TorrentException {
+        SourcesResponse response;
         try {
             response = (SourcesResponse) sendRequest(new SourcesRequest(fileId));
         } catch (IOException e) {
             return new ArrayList<>();
+        } catch (TorrentException e) {
+            throw new TorrentException("", e.getException());
         }
         return response.getClients();
     }
 
-    public void downloadFile(int fileId) throws IOException {
-        if(localFilesManager.getPartsManager().fileIsPresent(fileId)) {
-            throw new IllegalArgumentException("file with id " + fileId + " already added as local file");
+    public void downloadFile(int fileId) throws IOException, TorrentException {
+        if (localFilesManager.getPartsManager().fileIsPresent(fileId)) {
+            throw new TorrentException("file with id " + fileId + " already added as local file");
         }
 
-        List<FileInfo> files = getAvailableFiles();
-        FileInfo fileInfo = files.stream()
+        FileInfo fileInfo = getAvailableFiles().stream()
             .filter(f -> f.getId() == fileId)
             .findFirst().orElseThrow(() ->
-            new IllegalArgumentException("File with id " + fileId + " does not exist!")
-        );
+                new TorrentException("File with id " + fileId + " does not exist!")
+            );
 
         localFilesManager.addNotDownloadedFile(fileInfo.getName(), fileInfo.getId(), fileInfo.getSize());
     }
@@ -120,6 +118,5 @@ public class Client implements AutoCloseable {
     List<LocalFileReference> getLocalFiles() {
         return localFilesManager.getFiles();
     }
-
 
 }

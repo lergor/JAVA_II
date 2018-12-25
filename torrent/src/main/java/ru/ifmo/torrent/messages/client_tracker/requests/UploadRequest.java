@@ -12,16 +12,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class UploadRequest extends Request {
+
     private String fileName;
     private long fileSize;
 
-    public UploadRequest() {
-    }
-
-    public UploadRequest(String fileName, long fileSize) {
-        this.fileName = fileName;
-        this.fileSize = fileSize;
-    }
+    public UploadRequest() {}
 
     public UploadRequest(Path file) throws IOException {
         this.fileName = file.getFileName().toString();
@@ -59,9 +54,4 @@ public class UploadRequest extends Request {
         return fileSize;
     }
 
-    public static UploadRequest readFromDataInputStream(DataInputStream in) throws IOException {
-        UploadRequest request = new UploadRequest();
-        request.read(in);
-        return request;
-    }
 }

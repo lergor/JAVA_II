@@ -2,6 +2,8 @@ package ru.ifmo.torrent.tracker.state;
 
 import ru.ifmo.torrent.tracker.TrackerConfig;
 
+import java.util.Objects;
+
 public class TimedSeedInfo {
 
     private final SeedInfo seedInfo;
@@ -14,12 +16,15 @@ public class TimedSeedInfo {
 
     @Override
     public boolean equals(Object o) {
-        return seedInfo.equals(o);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TimedSeedInfo that = (TimedSeedInfo) o;
+        return Objects.equals(seedInfo, that.seedInfo);
     }
 
     @Override
     public int hashCode() {
-        return seedInfo.hashCode();
+        return Objects.hash(seedInfo);
     }
 
     public SeedInfo getSeedInfo() {
@@ -29,4 +34,5 @@ public class TimedSeedInfo {
     public boolean notAlive(long currentTime) {
         return currentTime - creationTime >= TrackerConfig.TIMEOUT;
     }
+
 }

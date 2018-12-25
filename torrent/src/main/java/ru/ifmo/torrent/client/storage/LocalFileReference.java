@@ -12,28 +12,26 @@ import java.util.stream.IntStream;
 
 public class LocalFileReference {
     private final int fileId;
+    private final long size;
     private final int numberOfParts;
     private final Set<Integer> readyParts;
     private final String name;
 
-    private LocalFileReference(String name, int fileId, int numberOfParts, Set<Integer> readyParts) {
+    private LocalFileReference(String name, int fileId, long size, int numberOfParts, Set<Integer> readyParts) {
         this.fileId = fileId;
         this.name = name;
         this.numberOfParts = numberOfParts;
         this.readyParts = readyParts;
+        this.size = size;
     }
 
-    public static LocalFileReference createEmpty(String name, int fileId, int numberOfParts) {
-        return new LocalFileReference(name, fileId, numberOfParts, new HashSet<>());
+    public static LocalFileReference createEmpty(String name, int fileId, long size, int numberOfParts) {
+        return new LocalFileReference(name, fileId, size, numberOfParts, new HashSet<>());
     }
 
-    public static LocalFileReference createFull(String name, int fileId, int numberOfParts) {
+    public static LocalFileReference createFull(String name, int fileId, long size, int numberOfParts) {
         Set<Integer> readyParts = IntStream.range(0, numberOfParts).boxed().collect(Collectors.toSet());
-        return new LocalFileReference(name, fileId, numberOfParts, readyParts);
-    }
-
-    public static LocalFileReference createPartly(String name, int fileId, int numberOfParts, Set<Integer> readyParts) {
-        return new LocalFileReference(name, fileId, numberOfParts, readyParts);
+        return new LocalFileReference(name, fileId, size, numberOfParts, readyParts);
     }
 
     public int getFileId() {
@@ -52,6 +50,10 @@ public class LocalFileReference {
         return name;
     }
 
+    public long getSize() {
+        return size;
+    }
+
     public void addReadyPart(int part) {
         if (part < numberOfParts) {
             readyParts.add(part);
@@ -60,6 +62,7 @@ public class LocalFileReference {
 
     public static LocalFileReference readFrom(DataInputStream in) throws IOException {
         int id = in.readInt();
+        long size = in.readLong();
         String name = in.readUTF();
         int numOfParts = in.readInt();
         int numOfReadyParts = in.readInt();
@@ -68,11 +71,12 @@ public class LocalFileReference {
             int part = in.readInt();
             readyParts.add(part);
         }
-        return new LocalFileReference(name, id, numOfParts, readyParts);
+        return new LocalFileReference(name, id, size, numOfParts, readyParts);
     }
 
     public void write(DataOutputStream out) throws IOException {
         out.writeInt(fileId);
+        out.writeLong(size);
         out.writeUTF(name);
         out.writeInt(numberOfParts);
         out.writeInt(readyParts.size());

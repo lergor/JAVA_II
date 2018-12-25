@@ -3,6 +3,7 @@ package ru.ifmo.torrent.client.storage;
 import ru.ifmo.torrent.client.Client;
 import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.messages.client_tracker.requests.UpdateRequest;
+import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,21 +21,21 @@ public class SourcesUpdater implements AutoCloseable {
 
     public SourcesUpdater(Client client, LocalFilesManager filesManager, short clientPort) {
         pool = Executors.newScheduledThreadPool(1);
-        pool.scheduleAtFixedRate(this::updateSources, 0, ClientConfig.UPDATE_RATE, TimeUnit.MILLISECONDS);
+        pool.scheduleAtFixedRate(this::updateSources, 0, ClientConfig.UPDATE_RATE_SEC, TimeUnit.SECONDS);
         this.filesManager = filesManager;
         this.client = client;
         this.clientPort = clientPort;
     }
 
-    public void updateSources() {
+    private void updateSources() {
         List<Integer> fileIds = filesManager.getFiles().stream()
-            .filter( f -> !f.getReadyParts().isEmpty())
+            .filter(f -> !f.getReadyParts().isEmpty())
             .map(LocalFileReference::getFileId)
             .collect(Collectors.toList());
 
         try {
             client.sendRequest(new UpdateRequest(clientPort, fileIds));
-        } catch (IOException e) {
+        } catch (IOException | TorrentException ignored) {
         }
     }
 
@@ -42,4 +43,5 @@ public class SourcesUpdater implements AutoCloseable {
     public void close() {
         pool.shutdown();
     }
+
 }

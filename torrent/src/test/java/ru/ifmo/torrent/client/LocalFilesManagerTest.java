@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.ifmo.torrent.client.storage.LocalFilesManager;
 import ru.ifmo.torrent.client.storage.LocalFileReference;
+import ru.ifmo.torrent.util.TorrentException;
 
 import java.io.IOException;
 
@@ -34,7 +35,7 @@ public class LocalFilesManagerTest {
     }
 
     @Test
-    public void testAddAndContainsAfterReloading() throws IOException {
+    public void testAddAndContainsAfterReloading() throws IOException, TorrentException {
         LocalFilesManager storedState = new LocalFilesManager(folder.getRoot().toPath());
 
         storedState.addLocalFile(name, id, size);

@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 import java.util.Objects;
 
 public class SeedInfo {
+
     private final short port;
     private final InetAddress inetAddress;
 
@@ -18,15 +19,15 @@ public class SeedInfo {
         this.inetAddress = inetAddress;
     }
 
-    public byte[] IP() {
+    public byte[] getIP() {
         return inetAddress.getAddress();
     }
 
-    public short port() {
+    public short getPort() {
         return port;
     }
 
-    public InetAddress inetAddress() {
+    public InetAddress getInetAddress() {
         return inetAddress;
     }
 
@@ -43,4 +44,5 @@ public class SeedInfo {
     public int hashCode() {
         return Objects.hash(port, inetAddress);
     }
+
 }

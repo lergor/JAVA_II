@@ -50,9 +50,10 @@ public class StorageManagerTest {
         }
 
         Path mergedFile = folder.newFile().toPath();
-        partsManager.mergeSplitted(0, mergedFile);
+        partsManager.mergeSplitted(0, 24, mergedFile);
 
         String storedContent = FileUtils.readFileToString(mergedFile.toFile());
         assertThat(storedContent).isEqualTo("content1content2content3");
+        System.out.println(Files.size(mergedFile));
     }
 }

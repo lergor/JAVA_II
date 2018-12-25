@@ -2,6 +2,7 @@ package ru.ifmo.torrent.client.seed;
 
 import ru.ifmo.torrent.client.storage.LocalFileReference;
 import ru.ifmo.torrent.client.storage.LocalFilesManager;
+import ru.ifmo.torrent.messages.Request;
 import ru.ifmo.torrent.messages.seed_peer.Marker;
 import ru.ifmo.torrent.messages.seed_peer.requests.*;
 import ru.ifmo.torrent.messages.seed_peer.response.*;
@@ -16,35 +17,34 @@ import java.util.List;
 
 class LeechHandler implements Runnable {
 
-    private final Socket peerSocket;
+    private final Socket leechSocket;
     private final LocalFilesManager filesManager;
 
     LeechHandler(Socket leecher, LocalFilesManager localFilesManager) {
-        this.peerSocket = leecher;
+        this.leechSocket = leecher;
         this.filesManager = localFilesManager;
     }
 
     @Override
     public void run() {
-        try (Socket socket = peerSocket) {
-            DataInputStream in = new DataInputStream(peerSocket.getInputStream());
-            DataOutputStream out = new DataOutputStream(peerSocket.getOutputStream());
+        try (Socket socket = leechSocket) {
+            DataInputStream in = new DataInputStream(leechSocket.getInputStream());
+            DataOutputStream out = new DataOutputStream(leechSocket.getOutputStream());
 
             Response response = null;
             int marker;
             while ((marker = in.read()) != -1) {
                 switch (marker) {
                     case Marker.GET: {
-                        GetRequest request = GetRequest.readFromDataInputStream(in);
-                        InputStream is = getPartForDownloading(request.getFileID(), request.getPart());
+                        GetRequest request = (GetRequest) Request.readFromDataInputStream(in, GetRequest.class);
+                        InputStream is = getPartForDownloading(request.getFileId(), request.getPart());
                         response = new GetResponse(is);
                         is.close();
                         break;
                     }
                     case Marker.STAT: {
-                        StatRequest request = StatRequest.readFromDataInputStream(in);
-                        List<Integer> av = getParts(request.getFileID());
-                        response = new StatResponse(av);
+                        StatRequest request = (StatRequest) StatRequest.readFromDataInputStream(in, StatRequest.class);
+                        response = new StatResponse(getParts(request.getFileId()));
                         break;
                     }
                     default:
@@ -65,6 +65,10 @@ class LeechHandler implements Runnable {
             }
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
             e.printStackTrace();
         }
 

@@ -34,10 +34,10 @@ public class ListResponse extends Response {
     public void read(DataInputStream in) throws IOException {
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
-            int ID = in.readInt();
+            int id = in.readInt();
             String name = in.readUTF();
             long size = in.readLong();
-            FileInfo f = new FileInfo(ID, name, size);
+            FileInfo f = new FileInfo(id, name, size);
             files.add(f);
         }
 

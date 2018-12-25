@@ -12,17 +12,11 @@ import java.util.concurrent.Executors;
 public class Tracker implements AutoCloseable, Runnable {
 
     private final ExecutorService pool = Executors.newFixedThreadPool(TrackerConfig.THREADS_COUNT);
-    private final short port;
     private final TrackerState state;
     private final ServerSocket serverSocket;
 
-    public Tracker(short port) throws TorrentException {
-        this.port = port;
-        try {
-            state = new TrackerState(TrackerConfig.getTrackerStateFile());
-        } catch (IOException e) {
-            throw new TorrentException("cannot read meta info about available files", e);
-        }
+    public Tracker(short port) throws TorrentException, IOException {
+        state = new TrackerState(TrackerConfig.getTrackerStateFile());
 
         try {
             serverSocket = new ServerSocket(port);
@@ -34,14 +28,15 @@ public class Tracker implements AutoCloseable, Runnable {
     @Override
     public void run() {
         pool.submit(() -> {
-            System.out.println("tracker started at port " + port);
-
             try {
                 while (!Thread.interrupted()) {
                     Socket client = serverSocket.accept();
                     pool.submit(new ClientHandler(client, state));
                 }
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                if(!serverSocket.isClosed()) {
+                    throw new IllegalStateException("cannot close tracker socket", e);
+                }
             }
         });
     }
@@ -50,12 +45,11 @@ public class Tracker implements AutoCloseable, Runnable {
     public void close() throws TorrentException {
         try {
             serverSocket.close();
-            state.storeToFile();
-            pool.shutdown();
         } catch (IOException e) {
-            throw new TorrentException("cannot write meta info about available files", e);
+            throw new TorrentException("cannot close tracker properly", e);
         }
-
+        state.storeToFile();
+        pool.shutdown();
     }
 
 }

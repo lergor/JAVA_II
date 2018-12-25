@@ -10,6 +10,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class SourcesRequest extends Request {
+
     private int fileId;
 
     public SourcesRequest() {}
@@ -44,9 +45,4 @@ public class SourcesRequest extends Request {
         return fileId;
     }
 
-    public static SourcesRequest readFromDataInputStream(DataInputStream in) throws IOException {
-        SourcesRequest request = new SourcesRequest();
-        request.read(in);
-        return request;
-    }
 }

@@ -26,8 +26,8 @@ public class SourcesResponse extends Response {
     public void write(DataOutputStream out) throws IOException {
         out.writeInt(clients.size());
         for (SeedInfo c : clients) {
-            out.write(c.IP());
-            out.writeShort(c.port());
+            out.write(c.getIP());
+            out.writeShort(c.getPort());
         }
     }
 
@@ -53,4 +53,5 @@ public class SourcesResponse extends Response {
     public void setFileId(int fileId) {
         this.fileId = fileId;
     }
+
 }

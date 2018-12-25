@@ -25,7 +25,7 @@ public class RequestTests {
         GetRequest acceptedRequest = new GetRequest();
 
         acceptedRequest.read(in);
-        assertThat(acceptedRequest.getFileID()).isEqualTo(sentRequest.getFileID());
+        assertThat(acceptedRequest.getFileId()).isEqualTo(sentRequest.getFileId());
         assertThat(acceptedRequest.getPart()).isEqualTo(sentRequest.getPart());
     }
 
@@ -36,7 +36,7 @@ public class RequestTests {
         DataInputStream in = testSendAndAccept(sentRequest, Marker.STAT);
 
         acceptedRequest.read(in);
-        assertThat(sentRequest.getFileID()).isEqualTo(acceptedRequest.getFileID());
+        assertThat(sentRequest.getFileId()).isEqualTo(acceptedRequest.getFileId());
     }
 
     private DataInputStream testSendAndAccept(Request request, byte marker) throws IOException {

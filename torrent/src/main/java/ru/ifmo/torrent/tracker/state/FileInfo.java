@@ -29,10 +29,10 @@ public class FileInfo {
     }
 
     public static FileInfo readFrom(DataInputStream in) throws IOException {
-        int ID = in.readInt();
+        int id = in.readInt();
         String name = in.readUTF();
         long size = in.readLong();
-        return new FileInfo(ID, name, size);
+        return new FileInfo(id, name, size);
     }
 
     public void write(DataOutputStream out) throws IOException {

@@ -6,6 +6,7 @@ import ru.ifmo.torrent.messages.Response;
 
 import java.io.*;
 
+
 public class GetResponse extends Response {
 
     private byte[] content;

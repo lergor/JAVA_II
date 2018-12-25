@@ -8,13 +8,15 @@ import java.nio.file.Path;
 public class ClientConfig extends Config {
 
     public static final int FILE_PART_SIZE = 1024 * 1024 * 10;
-    public static final int UPDATE_RATE = 10 * 1000;
+    public static final int UPDATE_RATE_SEC = 10;
+    public static final int TRACKER_PORT = 8081;
+    public static final int SEED_THREADS_COUNT = 4;
+    public static final int DOWNLOADS_LIMIT = 5;
 
-    public static final String PARTS_STORAGE = "parts";
-    public static final String LOCAL_FILES_FILE = "local_files";
+    private static final String PARTS_STORAGE = "parts";
+    private static final String LOCAL_FILES_FILE = "local_files_manager_file";
 
-    private ClientConfig() {
-    }
+    private ClientConfig() {}
 
     public static Path getMetaDir() {
         Path storage = CLIENT_STORAGE;
@@ -31,4 +33,5 @@ public class ClientConfig extends Config {
     public static Path getLocalFilesFile() {
         return getMetaDir().resolve(LOCAL_FILES_FILE);
     }
+
 }
