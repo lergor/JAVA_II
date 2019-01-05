@@ -1,12 +1,12 @@
 # Torrent
 
-###Description
+### Description
 
 This repository contains simple torrent with tracker and client applications.
 
-###How to run
+### How to run
 
-In order to run this app, follow this steps:
+In order to run this app, follow these steps:
 
 * clone this repository
 * checkout on branch *torrent*
@@ -14,7 +14,7 @@ In order to run this app, follow this steps:
 * go to the `build/libs` directory
 * run ```java -jar trackerApp-jar-1.0-SNAPSHOT.jar``` and ```java -jar clientApp-jar-1.0-SNAPSHOT.jar``` to run Tracker or Client respectively 
 
-###Usage
+### Usage
 
 Tracker:</br>
 ```
@@ -31,7 +31,7 @@ download <id> - download file with the specified id
 exit - shutdown the client app
 ```
 
-###File hierarchy
+### File hierarchy
 ```
 torrent/ - directory for downloads
     .metainfo/ - directory for torrent metafiles
