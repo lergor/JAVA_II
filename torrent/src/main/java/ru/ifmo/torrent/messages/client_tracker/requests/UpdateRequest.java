@@ -1,7 +1,6 @@
 package ru.ifmo.torrent.messages.client_tracker.requests;
 
 import ru.ifmo.torrent.messages.Request;
-import ru.ifmo.torrent.messages.Response;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
 import ru.ifmo.torrent.messages.client_tracker.response.UpdateResponse;
 
@@ -11,7 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UpdateRequest extends Request {
+public class UpdateRequest extends Request<UpdateResponse> {
     private short clientPort;
     private List<Integer> fileIds;
 
@@ -30,7 +29,7 @@ public class UpdateRequest extends Request {
     }
 
     @Override
-    public Response getEmptyResponse() {
+    public UpdateResponse getEmptyResponse() {
         return new UpdateResponse();
     }
 

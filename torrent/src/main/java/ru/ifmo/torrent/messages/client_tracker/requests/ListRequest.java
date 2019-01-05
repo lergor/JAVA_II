@@ -3,13 +3,12 @@ package ru.ifmo.torrent.messages.client_tracker.requests;
 import ru.ifmo.torrent.messages.client_tracker.Marker;
 import ru.ifmo.torrent.messages.client_tracker.response.ListResponse;
 import ru.ifmo.torrent.messages.Request;
-import ru.ifmo.torrent.messages.Response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class ListRequest extends Request {
+public class ListRequest extends Request<ListResponse> {
 
     public ListRequest() {}
 
@@ -19,7 +18,7 @@ public class ListRequest extends Request {
     }
 
     @Override
-    public Response getEmptyResponse() {
+    public ListResponse getEmptyResponse() {
         return new ListResponse();
     }
 

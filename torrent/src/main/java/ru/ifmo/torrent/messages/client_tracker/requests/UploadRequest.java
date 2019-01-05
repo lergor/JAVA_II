@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class UploadRequest extends Request {
+public class UploadRequest extends Request<UploadResponse> {
 
     private String fileName;
     private long fileSize;
@@ -29,7 +29,7 @@ public class UploadRequest extends Request {
     }
 
     @Override
-    public Response getEmptyResponse() {
+    public UploadResponse getEmptyResponse() {
         return new UploadResponse();
     }
 

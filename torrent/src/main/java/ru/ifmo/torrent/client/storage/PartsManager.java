@@ -23,12 +23,18 @@ public class PartsManager {
     }
 
     public void storeSplitted(LocalFileReference reference, Path targetFile) throws IOException {
-        InputStream is = Files.newInputStream(targetFile);
-        for (int i = 0; i < reference.getNumberOfParts(); i++) {
-            byte[] buf = new byte[reference.getBlockSizeForPart(i)];
-            int readed = is.read(buf);
-            try (OutputStream out = getForWriting(reference.getFileId(), i)) {
-                out.write(buf, 0, readed);
+        try (InputStream is = Files.newInputStream(targetFile)) {
+            for (int i = 0; i < reference.getNumberOfParts(); i++) {
+                int partSize = reference.getBlockSizeForPart(i);
+                byte[] buf = new byte[partSize];
+                int totalReaded = 0;
+                try (OutputStream out = getForWriting(reference.getFileId(), i)) {
+                    while (totalReaded != partSize) {
+                        int readed = is.read(buf);
+                        out.write(buf, totalReaded, readed);
+                        totalReaded += readed;
+                    }
+                }
             }
         }
     }
@@ -45,7 +51,7 @@ public class PartsManager {
             }
         }
         OutputStream out = Files.newOutputStream(targetFile, StandardOpenOption.TRUNCATE_EXISTING);
-        for (Path p: parts) {
+        for (Path p : parts) {
             Files.copy(p, out);
         }
     }
@@ -56,7 +62,7 @@ public class PartsManager {
 
     public OutputStream getForWriting(int fileId, int part) throws IOException {
         Path partFile = storage.resolve(String.valueOf(fileId)).resolve(String.valueOf(part));
-        if(Files.notExists(partFile)) {
+        if (Files.notExists(partFile)) {
             Files.createDirectories(partFile.getParent());
             Files.createFile(partFile);
         }

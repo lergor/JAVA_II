@@ -9,7 +9,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class StatRequest extends Request {
+public class StatRequest extends Request<StatResponse> {
     private int fileId;
 
     public StatRequest() {
@@ -25,7 +25,7 @@ public class StatRequest extends Request {
     }
 
     @Override
-    public Response getEmptyResponse() {
+    public StatResponse getEmptyResponse() {
         return new StatResponse();
     }
 

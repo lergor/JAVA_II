@@ -35,7 +35,7 @@ public class Tracker implements AutoCloseable, Runnable {
                     pool.submit(new ClientHandler(client, state));
                 }
             } catch (IOException e) {
-                if(!serverSocket.isClosed()) {
+                if (!serverSocket.isClosed()) {
                     throw new IllegalStateException("cannot close tracker socket", e);
                 }
             }
@@ -48,9 +48,10 @@ public class Tracker implements AutoCloseable, Runnable {
             serverSocket.close();
         } catch (IOException e) {
             throw new TorrentException("cannot close tracker properly", e);
+        } finally {
+            pool.shutdown();
+            state.storeToFile();
         }
-        state.storeToFile();
-        pool.shutdown();
     }
 
 }

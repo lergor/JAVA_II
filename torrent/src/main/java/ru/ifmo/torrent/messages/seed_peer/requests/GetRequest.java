@@ -9,7 +9,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class GetRequest extends Request {
+public class GetRequest extends Request<GetResponse> {
 
     private int fileId;
     private int part;
@@ -28,7 +28,7 @@ public class GetRequest extends Request {
     }
 
     @Override
-    public Response getEmptyResponse() {
+    public GetResponse getEmptyResponse() {
         return new GetResponse();
     }
 

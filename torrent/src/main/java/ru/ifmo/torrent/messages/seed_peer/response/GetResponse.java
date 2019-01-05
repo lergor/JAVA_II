@@ -1,6 +1,7 @@
 package ru.ifmo.torrent.messages.seed_peer.response;
 
 import org.apache.commons.io.IOUtils;
+import ru.ifmo.torrent.client.ClientConfig;
 import ru.ifmo.torrent.messages.Response;
 
 import java.io.*;
@@ -15,7 +16,10 @@ public class GetResponse extends Response {
     public GetResponse(InputStream in, int size) throws IOException {
         this.size = size;
         this.content = new byte[size];
-        in.read(content);
+        int totalReaded = 0;
+        while(totalReaded != size) {
+            totalReaded += in.read(content);
+        }
     }
 
     @Override
